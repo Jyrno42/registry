@@ -189,7 +189,7 @@ namespace :import do
           x.object.authinfopw.try(:strip),
           name,
           x.organization.try(:strip),
-          x.object_registry.try(:registrar).try(:id),
+          x.object.try(:clid),
           x.object_registry.try(:crid),
           x.object.try(:upid) ? x.object.try(:upid) : x.object_registry.try(:crid),
           x.country.try(:strip),
