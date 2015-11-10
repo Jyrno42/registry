@@ -110,10 +110,7 @@ class Epp::DomainsController < EppController
     period_unit = Epp::Domain.parse_period_unit_from_frame(params[:parsed_frame]) || 'y'
 
     balance_ok?('renew', period, period_unit) # loading pricelist
-    if !@domain_pricelist.try(:price)#checking if pricelist is not found
-      @domain.add_epp_error('2306', nil, nil, 'No price list for domain')
-      handle_errors(@domain) and return if @domain.errors.any?
-    end
+    handle_errors(@domain) and return if @domain.errors.any?
 
     ActiveRecord::Base.transaction do
       success = @domain.renew(
@@ -261,6 +258,10 @@ class Epp::DomainsController < EppController
 
   def balance_ok?(operation, period = nil, unit = nil)
     @domain_pricelist = @domain.pricelist(operation, period.try(:to_i), unit)
+    if !@domain_pricelist.try(:price)#checking if pricelist is not found
+      @domain.add_epp_error('2306', nil, nil, 'No price list for domain')
+      return false
+    end
     if current_user.registrar.balance < @domain_pricelist.price.amount
       epp_errors << {
         code: '2104',
