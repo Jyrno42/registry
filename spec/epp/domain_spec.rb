@@ -2795,7 +2795,7 @@ describe 'EPP Domain', epp: true do
       DomainCron.start_redemption_grace_period
 
       domain.reload
-      domain.statuses.include?(DomainStatus::EXPIRED).should == true
+      domain.expired?.should == true
       domain.statuses.include?(DomainStatus::SERVER_HOLD).should == true
       domain.statuses.include?(DomainStatus::OK).should == false
 
@@ -2812,7 +2812,7 @@ describe 'EPP Domain', epp: true do
       response[:results][0][:result_code].should == '1000'
 
       domain.reload
-      domain.statuses.include?(DomainStatus::EXPIRED).should == false
+      domain.expired?.should == false
       domain.statuses.include?(DomainStatus::SERVER_HOLD).should == false
       domain.statuses.include?(DomainStatus::OK).should == true
 

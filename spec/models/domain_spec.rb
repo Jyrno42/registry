@@ -1,6 +1,6 @@
 require 'rails_helper'
 
-describe Domain do
+RSpec.describe Domain do
   before :all do
     Fabricate(:zonefile_setting, origin: 'ee')
     Fabricate(:zonefile_setting, origin: 'pri.ee')
@@ -149,7 +149,7 @@ describe Domain do
 
     it 'should expire domains' do
       DomainCron.start_expire_period
-      @domain.statuses.include?(DomainStatus::EXPIRED).should == false
+      @domain.expired?.should == false
 
       old_valid_to = Time.zone.now - 10.days
       @domain.valid_to = old_valid_to
@@ -157,13 +157,13 @@ describe Domain do
 
       DomainCron.start_expire_period
       @domain.reload
-      @domain.statuses.include?(DomainStatus::EXPIRED).should == true
+      @domain.expired?.should == true
       @domain.outzone_at.should be_within(5).of(old_valid_to + Setting.expire_warning_period.days)
       @domain.delete_at.should == (old_valid_to + Setting.expire_warning_period.days + Setting.redemption_grace_period.days + 1.day).beginning_of_day
 
       DomainCron.start_expire_period
       @domain.reload
-      @domain.statuses.include?(DomainStatus::EXPIRED).should == true
+      @domain.expired?.should == true
     end
 
     it 'should start redemption grace period' do
@@ -175,7 +175,7 @@ describe Domain do
 
       DomainCron.start_expire_period
       @domain.reload
-      @domain.statuses.include?(DomainStatus::EXPIRED).should == true
+      @domain.expired?.should == true
       @domain.outzone_at.should be_within(5).of(old_valid_to + Setting.expire_warning_period.days)
       @domain.delete_at.should == (old_valid_to + Setting.expire_warning_period.days + Setting.redemption_grace_period.days + 1.day).beginning_of_day
     end
