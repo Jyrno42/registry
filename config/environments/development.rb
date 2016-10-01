@@ -10,11 +10,8 @@ Rails.application.configure do
   config.eager_load = false
 
   # Show full error reports and disable caching.
-  config.consider_all_requests_local       = true
+  config.consider_all_requests_local = true
   config.action_controller.perform_caching = false
-
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -38,7 +35,10 @@ Rails.application.configure do
   # config.log_tags = [:subdomain, :uuid, :remote_ip]
   # config.logger = ActiveSupport::TaggedLogging.new(Syslog::Logger.new(ENV['app_name'] || 'registry'))
 
+  config.action_mailer.raise_delivery_errors = false
   config.action_mailer.default_url_options = { host: 'localhost:8081' }
+  config.action_mailer.delivery_method = :smtp
+  config.action_mailer.smtp_settings = { address: 'localhost', port: 1025 }
 
   # for finding database optimization
   config.after_initialize do
