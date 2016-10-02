@@ -14,18 +14,18 @@ if ENV['ROBOT']
   SimpleCov.start 'rails'
 end
 
-# Requires supporting ruby files with custom matchers and macros, etc, in
-# spec/support/ and its subdirectories. Files matching `spec/**/*_spec.rb` are
-# run as spec files by default. This means that files in spec/support that end
-# in _spec.rb will both be required and run as specs, causing the specs to be
-# run twice. It is recommended that you do not name files matching this glob to
-# end with _spec.rb. You can configure this pattern with with the --pattern
-# option on the command line or in ~/.rspec, .rspec or `.rspec-local`.
-Dir[Rails.root.join('spec/support/**/*.rb')].each { |f| require f }
+require 'support/matchers/alias_attribute'
+require 'support/capybara'
+require 'support/database_cleaner'
+require 'support/epp'
+require 'support/epp_doc'
+require 'support/feature'
+require 'support/registrar_helpers'
+require 'support/request'
 
 # Checks for pending migrations before tests are run.
 # If you are not using ActiveRecord, you can remove this line.
-ActiveRecord::Migration.maintain_test_schema!
+#ActiveRecord::Migration.maintain_test_schema!
 
 # create general settings
 def create_settings
@@ -47,63 +47,42 @@ def create_settings
   Setting.tech_contacts_max_count = 10
 
   Setting.client_side_status_editing_enabled = true
-
-  # speedup and easier to create fabrications
-  @fixed_registrar =
-    Registrar.find_by_name('fixed registrar') ||
-    Fabricate(:registrar, name: 'fixed registrar', code: 'FIXED')
 end
 
 RSpec.configure do |config|
-  config.filter_run focus: true
-  config.run_all_when_everything_filtered = true
-
+  config.include ActionView::TestCase::Behavior, type: :presenter
   config.include ActiveSupport::Testing::TimeHelpers
+
+  config.define_derived_metadata(file_path: %r{/spec/presenters/}) do |metadata|
+    metadata[:type] = :presenter
+    metadata[:db] = false
+  end
 
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false
   # instead of true.
   config.use_transactional_fixtures = false
 
-  config.before(:suite) do
-    ActiveRecord::Base.establish_connection :api_log_test
-    DatabaseCleaner.clean_with(:truncation)
-    DatabaseCleaner.strategy = nil
+  # config.before(:all) do
+  #   create_settings
+  # end
+  #
+  # config.before(:all, epp: true) do
+  #   create_settings
+  # end
+  #
+  # config.before(:each, js: true) do
+  #   create_settings
+  # end
+  #
+  # config.before(:each, type: :request) do
+  #   create_settings
+  # end
+  #
+  # config.before(:each, type: :model) do
+  #   create_settings
+  # end
 
-    ActiveRecord::Base.establish_connection :test
-  end
-
-  config.before(:all) do
-    DatabaseCleaner.clean_with(:truncation)
-    create_settings
-  end
-
-  config.before(:all, epp: true) do
-    DatabaseCleaner.strategy = nil
-    create_settings
-  end
-
-  config.before(:each, js: true) do
-    DatabaseCleaner.strategy = :truncation
-    create_settings
-  end
-
-  config.before(:each, type: :request) do
-    DatabaseCleaner.strategy = :truncation
-    create_settings
-  end
-
-  config.before(:each, type: :model) do
-    create_settings
-    DatabaseCleaner.strategy = :transaction
-    DatabaseCleaner.start
-  end
-
-  config.after(:each, type: :model) do
-    DatabaseCleaner.clean
-  end
-
-  Capybara.javascript_driver = :poltergeist
 
   # RSpec Rails can automatically mix in different behaviours to your tests
   # based on their file location, for example enabling you to call `get` and
