@@ -117,5 +117,9 @@ class Nameserver < ActiveRecord::Base
       # ignoring ips
       rel
     end
+
+    def hostnames
+      pluck(:hostname)
+    end
   end
 end

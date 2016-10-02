@@ -1,7 +1,7 @@
 require 'rails_helper'
 
-describe Contact do
-  before :all do
+RSpec.describe Contact do
+  before :example do
     Fabricate(:zonefile_setting, origin: 'ee')
     @api_user = Fabricate(:api_user)
   end
@@ -124,8 +124,8 @@ describe Contact do
   end
 
   context 'with valid attributes' do
-    before :all do
-      @contact = Fabricate(:contact)
+    before :example do
+      @contact = Fabricate.build(:contact, registrar: Fabricate(:registrar))
     end
 
     it 'should be valid' do
@@ -134,7 +134,7 @@ describe Contact do
     end
 
     it 'should be valid twice' do
-      @contact = Fabricate(:contact)
+      @contact = Fabricate(:contact, registrar: Fabricate(:registrar))
       @contact.valid?
       @contact.errors.full_messages.should match_array([])
     end
@@ -182,7 +182,7 @@ describe Contact do
     end
 
     it 'should remove ok status when other non linked status present' do
-      contact = Fabricate(:contact)
+      contact = Fabricate(:contact, registrar: Fabricate(:registrar))
       contact.statuses = [Contact::SERVER_UPDATE_PROHIBITED]
       contact.statuses.should == [Contact::SERVER_UPDATE_PROHIBITED] # temp test
       contact.save
@@ -190,10 +190,10 @@ describe Contact do
     end
 
     it 'should have linked status when domain' do
-      contact = Fabricate(:contact)
-      tech_domain_contact = Fabricate(:tech_domain_contact, contact_id: contact.id)
+      contact = Fabricate(:contact, registrar: Fabricate(:registrar))
+      tech_domain_contact = Fabricate(:tech_domain_contact, contact_id: contact.id, registrar: Fabricate(:registrar))
       contact.statuses.should == %w(ok)
-      domain = Fabricate(:domain, tech_domain_contacts: [tech_domain_contact])
+      domain = Fabricate(:domain, tech_domain_contacts: [tech_domain_contact], registrar: Fabricate(:registrar))
 
       contact = domain.contacts.first
       contact.save
@@ -206,7 +206,7 @@ describe Contact do
 
     it 'should not have linked status when no domain' do
       @admin_domain_contact = Fabricate(:admin_domain_contact, contact_id: @contact.id)
-      @domain = Fabricate(:domain, admin_domain_contacts: [@admin_domain_contact])
+      @domain = Fabricate(:domain, admin_domain_contacts: [@admin_domain_contact], registrar: Fabricate(:registrar))
       contact = @domain.contacts.first
       contact.save
 
@@ -231,7 +231,7 @@ describe Contact do
     end
 
     it 'should save status notes' do
-      contact = Fabricate(:contact)
+      contact = Fabricate(:contact, registrar: Fabricate(:registrar))
       contact.statuses = ['serverDeleteProhibited', 'serverUpdateProhibited']
       contact.status_notes_array = [nil, 'update manually turned off']
       contact.status_notes['serverDeleteProhibited'].should == nil
@@ -245,7 +245,7 @@ describe Contact do
 
     it 'should have not update ident updated at when initializing old contact' do
       # creating a legacy contact
-      contact = Fabricate(:contact)
+      contact = Fabricate(:contact, registrar: Fabricate(:registrar))
       contact.update_column(:ident_updated_at, nil)
 
       Contact.find(contact.id).ident_updated_at.should == nil
@@ -253,7 +253,7 @@ describe Contact do
 
     context 'as birthday' do
       before do
-        @domain = Fabricate(:domain)
+        @domain = Fabricate(:domain, registrar: Fabricate(:registrar))
       end
 
       it 'should have related domain descriptions hash' do
@@ -364,7 +364,7 @@ describe Contact do
         end
 
         it 'should generate code if empty code is given' do
-          @contact = Fabricate(:contact, code: '')
+          @contact = Fabricate(:contact, code: '', registrar: Fabricate(:registrar))
           @contact.code.should_not == ''
         end
 
@@ -399,11 +399,23 @@ describe Contact do
   end
 end
 
+RSpec.describe Contact do
+  describe '::names', db: false do
+    before :example do
+      expect(described_class).to receive(:pluck).with(:name).and_return('names')
+    end
+
+    it 'returns names' do
+      expect(described_class.names).to eq('names')
+    end
+  end
+end
+
 describe Contact, '.destroy_orphans' do
   before do
     Fabricate(:zonefile_setting, origin: 'ee')
-    @contact_1 = Fabricate(:contact, code: 'asd12')
-    @contact_2 = Fabricate(:contact, code: 'asd13')
+    @contact_1 = Fabricate(:contact, code: 'asd12', registrar: Fabricate(:registrar))
+    @contact_2 = Fabricate(:contact, code: 'asd13', registrar: Fabricate(:registrar))
   end
 
   it 'destroys orphans' do
@@ -413,13 +425,13 @@ describe Contact, '.destroy_orphans' do
   end
 
   it 'should find one orphan' do
-    Fabricate(:domain, registrant: Registrant.find(@contact_1.id))
+    Fabricate(:domain, registrant: Registrant.find(@contact_1.id), registrar: Fabricate(:registrar))
     Contact.find_orphans.count.should == 1
     Contact.find_orphans.last.should == @contact_2
   end
 
   it 'should find no orphans' do
-    Fabricate(:domain, registrant: Registrant.find(@contact_1.id), admin_contacts: [@contact_2])
+    Fabricate(:domain, registrant: Registrant.find(@contact_1.id), admin_contacts: [@contact_2], registrar: Fabricate(:registrar))
     cc = Contact.count
     Contact.find_orphans.count.should == 0
     Contact.destroy_orphans

@@ -117,17 +117,6 @@ class DomainMailer < ApplicationMailer
          name: @domain.name)} [#{@domain.name}]")
   end
 
-  def expiration_reminder(domain_id)
-    @domain = Domain.find_by(id: domain_id)
-    return if @domain.nil? || !@domain.expired? || whitelist_blocked?(@domain.registrant.email)
-    return if whitelist_blocked?(@domain.registrant.email)
-
-    mail(to: format(@domain.registrant.email),
-         subject: "#{I18n.t(:expiration_remind_subject,
-                            name: @domain.name)} [#{@domain.name}]")
-  end
-
-
   def force_delete(domain_id, should_deliver)
     @domain = Domain.find_by(id: domain_id)
     return if delivery_off?(@domain, should_deliver)
@@ -140,7 +129,15 @@ class DomainMailer < ApplicationMailer
         )
   end
 
+  def expiration(domain)
+    @domain = domain
+
+    subject = default_i18n_subject(domain_name: domain.name)
+    mail(to: domain.registrant_email, subject: subject)
+  end
+
   private
+
   # app/models/DomainMailModel provides the data for mail that can be composed_from
   # which ensures that values of objects are captured when they are valid, not later when this method is executed
   def compose_from(params)

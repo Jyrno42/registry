@@ -152,6 +152,7 @@ class Registrar < ActiveRecord::Base
   end
 
   def to_s
+    ActiveSupport::Deprecation.warn('Use presenter instead')
     name
   end
 

@@ -931,3 +931,44 @@ RSpec.describe Domain do
     end
   end
 end
+
+RSpec.describe Domain, db: false do
+  it { is_expected.to alias_attribute(:on_hold_time, :outzone_at) }
+  it { is_expected.to alias_attribute(:delete_time, :delete_at) }
+
+  describe '#admin_contact_names' do
+    let(:domain) { described_class.new }
+
+    before :example do
+      expect(Contact).to receive(:names).and_return('names')
+    end
+
+    it 'returns admin contact names' do
+      expect(domain.admin_contact_names).to eq('names')
+    end
+  end
+
+  describe '#tech_contact_names' do
+    let(:domain) { described_class.new }
+
+    before :example do
+      expect(Contact).to receive(:names).and_return('names')
+    end
+
+    it 'returns technical contact names' do
+      expect(domain.tech_contact_names).to eq('names')
+    end
+  end
+
+  describe '#nameserver_hostnames' do
+    let(:domain) { described_class.new }
+
+    before :example do
+      expect(Nameserver).to receive(:hostnames).and_return('hostnames')
+    end
+
+    it 'returns name server hostnames' do
+      expect(domain.nameserver_hostnames).to eq('hostnames')
+    end
+  end
+end

@@ -132,4 +132,12 @@ class DomainCron
     )
   end
 
+
+  def self.send_domain_expiration_reminders
+    expired_domains = Domain.expired
+
+    expired_domains.each do |domain|
+      DomainMailer.expiration_reminder(domain: domain).deliver!
+    end
+  end
 end

@@ -250,6 +250,9 @@ class Contact < ActiveRecord::Base
       kit.to_pdf
     end
 
+    def names
+      pluck(:name)
+    end
   end
 
   def roid
