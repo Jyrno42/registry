@@ -18,7 +18,7 @@ feature 'Sessions', type: :feature do
     end
 
     it 'should see log in' do
-      @fixed_registrar.white_ips = [Fabricate(:white_ip_registrar)]
+      Fabricate(:registrar, name: 'fixed registrar', code: 'FIXED').white_ips = [Fabricate(:white_ip_registrar)]
       visit registrar_login_path
       page.should have_text('Log in')
     end
