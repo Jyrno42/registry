@@ -750,6 +750,10 @@ class Domain < ActiveRecord::Base
     nameservers.hostnames
   end
 
+  def registered?
+    valid_to >= Time.current
+  end
+
   def self.to_csv
     CSV.generate do |csv|
       csv << column_names
