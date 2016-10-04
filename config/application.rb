@@ -46,6 +46,8 @@ module Registry
     config.assets.precompile += %w(registrar-manifest.css registrar-manifest.js)
     config.assets.precompile += %w(registrant-manifest.css registrant-manifest.js)
 
+    config.active_job.queue_adapter = :que
+
     # Active Record used to suppresses errors raised within
     # `after_rollback`/`after_commit` callbacks and only printed them to the logs.
     # In the next version, these errors will no longer be suppressed.
