@@ -37,7 +37,7 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = false
   config.action_mailer.default_url_options = { host: 'localhost:8081' }
   config.action_mailer.delivery_method = :smtp
-  config.action_mailer.smtp_settings = { address: 'localhost', port: 1025 }
+  config.action_mailer.smtp_settings = { address: 'localhost', port: 1025 } # MailCatcher
 
   # for finding database optimization
   config.after_initialize do
@@ -50,7 +50,4 @@ Rails.application.configure do
   end
 end
 
-# In this mode, any jobs you queue will be run in the same thread, synchronously
-# (that is, MyJob.enqueue runs the job and won't return until it's completed).
-# This makes your application's behavior easier to test
-Que.mode = :sync 
+Que.mode = :off
