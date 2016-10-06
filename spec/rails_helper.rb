@@ -15,6 +15,7 @@ if ENV['ROBOT']
 end
 
 require 'support/matchers/alias_attribute'
+require 'support/matchers/active_job'
 require 'support/capybara'
 require 'support/database_cleaner'
 require 'support/epp'
