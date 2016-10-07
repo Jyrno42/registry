@@ -1,7 +1,9 @@
 require 'rails_helper'
 
-RSpec.describe Domain do
-  describe '#expired?', db: false do
+RSpec.describe Domain, db: false do
+  it { is_expected.to alias_attribute(:expire_time, :valid_to) }
+
+  describe '#expired?' do
     context 'when :statuses contains expired status' do
       let(:domain) { described_class.new(statuses: [DomainStatus::EXPIRED]) }
 

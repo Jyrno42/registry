@@ -948,6 +948,18 @@ RSpec.describe Domain, db: false do
     end
   end
 
+  describe '#admin_contact_emails' do
+    let(:domain) { described_class.new }
+
+    before :example do
+      expect(Contact).to receive(:emails).and_return('emails')
+    end
+
+    it 'returns admin contact emails' do
+      expect(domain.admin_contact_emails).to eq('emails')
+    end
+  end
+
   describe '#tech_contact_names' do
     let(:domain) { described_class.new }
 

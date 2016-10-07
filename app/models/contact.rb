@@ -253,6 +253,10 @@ class Contact < ActiveRecord::Base
     def names
       pluck(:name)
     end
+
+    def emails
+      pluck(:email)
+    end
   end
 
   def roid

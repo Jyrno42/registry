@@ -742,6 +742,10 @@ class Domain < ActiveRecord::Base
     admin_contacts.names
   end
 
+  def admin_contact_emails
+    admin_contacts.emails
+  end
+
   def tech_contact_names
     tech_contacts.names
   end

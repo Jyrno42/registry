@@ -1,6 +1,10 @@
 module Concerns::Domain::Expirable
   extend ActiveSupport::Concern
 
+  included do
+    alias_attribute :expire_time, :valid_to
+  end
+
   def expired?
     statuses.include?(DomainStatus::EXPIRED)
   end

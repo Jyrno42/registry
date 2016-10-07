@@ -133,8 +133,10 @@ class DomainMailer < ApplicationMailer
     @domain = DomainPresenter.new(domain: domain, view: view_context)
     @registrar = RegistrarPresenter.new(registrar: domain.registrar, view: view_context)
 
+    recipients = domain.admin_contact_emails << domain.registrant_email
+
     subject = default_i18n_subject(domain_name: domain.name)
-    mail(to: domain.registrant_email, subject: subject)
+    mail(to: recipients, subject: subject)
   end
 
   private

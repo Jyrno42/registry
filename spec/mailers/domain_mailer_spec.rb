@@ -350,7 +350,11 @@ end
 
 RSpec.describe DomainMailer, db: false do
   describe '#expiration' do
-    let(:domain) { instance_spy(Domain) }
+    let(:domain) { instance_spy(Domain,
+                                   name: 'test.com',
+                                   registrant_email: 'registrant@test.com',
+                                   admin_contact_emails: ['admin.contact.email@test.com']
+    ) }
     let(:domain_presenter) { instance_spy(DomainPresenter) }
     let(:registrar_presenter) { instance_spy(RegistrarPresenter) }
     subject(:message) { described_class.expiration(domain: domain) }
@@ -365,14 +369,12 @@ RSpec.describe DomainMailer, db: false do
       expect(message.from).to eq(['noreply@internet.ee'])
     end
 
-    it 'has valid recipient' do
-      expect(domain).to receive(:registrant_email).and_return('registrant@test.com')
+    it 'has registrant and administrative contacts as recipient' do
       message.deliver!
-      expect(message.to).to eq(['registrant@test.com'])
+      expect(message.to).to match_array(['registrant@test.com', 'admin.contact.email@test.com'])
     end
 
     it 'has valid subject' do
-      expect(domain).to receive(:name).and_return('test.com')
       message.deliver!
       expect(message.subject).to eq('The test.com domain has expired')
     end

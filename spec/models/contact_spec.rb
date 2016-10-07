@@ -399,14 +399,24 @@ RSpec.describe Contact do
   end
 end
 
-RSpec.describe Contact do
-  describe '::names', db: false do
+RSpec.describe Contact, db: false do
+  describe '::names' do
     before :example do
       expect(described_class).to receive(:pluck).with(:name).and_return('names')
     end
 
     it 'returns names' do
       expect(described_class.names).to eq('names')
+    end
+  end
+
+  describe '::emails' do
+    before :example do
+      expect(described_class).to receive(:pluck).with(:email).and_return('emails')
+    end
+
+    it 'returns emails' do
+      expect(described_class.emails).to eq('emails')
     end
   end
 end
