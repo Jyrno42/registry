@@ -22,9 +22,15 @@ Registrikood: <b><%= @domain.registrant.try(:ident) %></b></p>
 
 <p>Kui &uuml;leandmine ei ole 30 p&auml;eva jooksul toimunud, kustub domeen <b><%= @domain.name %></b> 24 tunni jooksul <b><%= l(@domain.force_delete_at, format: :date) %></b> m&ouml;&ouml;dumisest juhuslikult valitud ajahetkel. Soovi korral on v&otilde;imalik domeen p&auml;rast selle kustumist registrist “kes ees, see mees” p&otilde;him&otilde;ttel uuesti registreerida.</p>
 
-<p>Lisak&uuml;simuste korral v&otilde;tke palun &uuml;hendust oma registripidajaga <%= @domain.registrar %>. Registripidajate kontaktid leiate aadressilt <a href="http://www.internet.ee/registripidajad" target="_blank">http://www.internet.ee/registripidajad</a></p><br /><br />
+<p>Lisak&uuml;simuste korral v&otilde;tke palun &uuml;hendust oma registripidajaga <%= @domain.registrar %>. Registripidajate kontaktid leiate aadressilt <a href="http://www.internet.ee/registripidajad" target="_blank">http://www.internet.ee/registripidajad</a></p>
 
+<p>Registripidaja:<br>
+<%= @domain.registrar.name %><br>
+Email: <%= @domain.registrar.email %><br>
+Telefon: <%= @domain.registrar.phone %><br>
+Veebileht: <%= @domain.registrar.url %></p>
 
+<hr>
 
 <strong>Dear contact of <%= @domain.name %> domain</strong>
 
@@ -41,9 +47,15 @@ Registry code: <b><%= @domain.registrant.try(:ident) %></b></p>
 
 <p>If the transfer has not been made in 30 days, the domain <b><%= @domain.name %></b> will be deleted at a randomly chosen moment within 24 hours after <b><%= l(@domain.force_delete_at, format: :date) %></b>. After deletion it is possible to reregister the domain on a "first come, first served" basis.</p>
 
-<p>Should you have additional questions, please contact your registrar <%= @domain.registrar %>, whose contact information can be found at <a href="http://www.internet.ee/registrars/" target="_blank">http://www.internet.ee/registrars/</a></p><br /><br />
+<p>Should you have additional questions, please contact your registrar <%= @domain.registrar %>, whose contact information can be found at <a href="http://www.internet.ee/registrars/" target="_blank">http://www.internet.ee/registrars/</a></p>
 
+<p>Registrar:<br>
+<%= @domain.registrar.name %><br>
+Email: <%= @domain.registrar.email %><br>
+Phone: <%= @domain.registrar.phone %><br>
+Website: <%= @domain.registrar.url %></p>
 
+<hr>
 
 <strong>Уважаемое контактное лицо домена <%= @domain.name %></strong>
 
@@ -60,8 +72,15 @@ Registry code: <b><%= @domain.registrant.try(:ident) %></b></p>
 
 <p>Если в течение 30 дней передача не произошла, домен <b><%= @domain.name %></b> удаляется по истечении 24 часов <b><%= l(@domain.force_delete_at, format: :date) %></b> в случайный момент времени. По желанию после удаления из регистра домен можно снова зарегистрировать по принципу "кто успел, тот и съел".</p>
 
-<p>Просим обратиться к своему регистратору <%= @domain.registrar %>. Контактные данные регистраторов можно найти по адресу <a href="http://www.internet.ee/registratory/" target="_blank">http://www.internet.ee/registratory/</a></p><br /><br />
+<p>Просим обратиться к своему регистратору <%= @domain.registrar %>. Контактные данные регистраторов можно найти по адресу <a href="http://www.internet.ee/registratory/" target="_blank">http://www.internet.ee/registratory/</a></p>
 
+<p>Регистратор:<br>
+<%= @domain.registrar.name %><br>
+Электронная почта: <%= @domain.registrar.email %><br>
+Телефон: <%= @domain.registrar.phone %><br>
+Веб-сайт: <%= @domain.registrar.url %></p>
+        
+        
       <table width="100%" cellspacing="0" cellpadding="0" border="0" align="center" style="text-align: justify; line-height: 16px; font-size: 12px;"><tbody>
         <tr><td align="left" valign="top">
           <p><strong>Lugupidamisega,<br />
@@ -74,3 +93,4 @@ Registry code: <b><%= @domain.registrant.try(:ident) %></b></p>
     </table>
   </td></tr>
 </tbody></table>
+  </table>
