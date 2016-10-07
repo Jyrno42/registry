@@ -38,12 +38,21 @@ class DomainCron
     domains = Domain.where('valid_to <= ?', Time.zone.now)
     marked = 0
     real = 0
+
     domains.each do |domain|
       next unless domain.expirable?
       real += 1
       domain.set_graceful_expired
       STDOUT << "#{Time.zone.now.utc} DomainCron.start_expire_period: ##{domain.id} (#{domain.name}) #{domain.changes}\n" unless Rails.env.test?
-      domain.save(validate: false) and marked += 1
+
+      send_email_delay = Setting.expiration_reminder_mail
+
+      domain.transaction do
+        domain.save(validate: false)
+        DomainExpirationEmailJob.set(wait: send_email_delay.days).perform_later(domain_id: domain.id)
+      end
+
+      marked += 1
     end
 
     STDOUT << "#{Time.zone.now.utc} - Successfully expired #{marked} of #{real} domains\n" unless Rails.env.test?
@@ -130,14 +139,5 @@ class DomainCron
         attached_obj_id: bye_bye.id,
         attached_obj_type: bye_bye.class.to_s # DomainVersion
     )
-  end
-
-
-  def self.send_domain_expiration_reminders
-    expired_domains = Domain.expired
-
-    expired_domains.each do |domain|
-      DomainMailer.expiration_reminder(domain: domain).deliver!
-    end
   end
 end

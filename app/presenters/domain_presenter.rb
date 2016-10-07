@@ -1,4 +1,6 @@
 class DomainPresenter
+  delegate :name, :registrant_name, to: :domain
+
   def initialize(domain:, view:)
     @domain = domain
     @view = view
@@ -22,10 +24,6 @@ class DomainPresenter
 
   def nameserver_names
     domain.nameserver_hostnames.join(', ')
-  end
-
-  def to_s
-    domain.name
   end
 
   private

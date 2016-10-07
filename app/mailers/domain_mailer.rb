@@ -129,8 +129,9 @@ class DomainMailer < ApplicationMailer
         )
   end
 
-  def expiration(domain)
-    @domain = domain
+  def expiration(domain:)
+    @domain = DomainPresenter.new(domain: domain, view: view_context)
+    @registrar = RegistrarPresenter.new(registrar: domain.registrar, view: view_context)
 
     subject = default_i18n_subject(domain_name: domain.name)
     mail(to: domain.registrant_email, subject: subject)

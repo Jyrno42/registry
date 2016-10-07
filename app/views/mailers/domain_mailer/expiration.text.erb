@@ -1,20 +1,17 @@
-<% domain = DomainPresenter.new(domain: @domain, view: self) %>
-<% registrar = RegistrarPresenter.new(registrar: @domain.registrar, view: self) %>
-
-Domeen <%= domain %> on aegunud
+Domeen <%= @domain.name %> on aegunud
 Lugupeetud .ee domeeni kasutaja
 
-Domeeninimi <%= domain %> on aegunud ja ei ole alates <%= domain.on_hold_date %> internetis kättesaadav. Alates <%= domain.delete_date %> on domeen <%= domain %> avatud registreerimiseks kõigile huvilistele.
+Domeeninimi <%= @domain.name %> on aegunud ja ei ole alates <%= @domain.on_hold_date %> internetis kättesaadav. Alates <%= @domain.delete_date %> on domeen <%= @domain.name %> avatud registreerimiseks kõigile huvilistele.
 
-Domeeni registreeringu pikendamiseks pöörduge palun oma registripidaja <%= registrar %> poole. Registripidajate kontaktid leiate aadressilt www.internet.ee/registripidajad.
+Domeeni registreeringu pikendamiseks pöörduge palun oma registripidaja <%= @registrar.name %> poole. Registripidajate kontaktid leiate aadressilt www.internet.ee/registripidajad.
 
-Domeeni <%= domain %> kohta on registris järgmised andmed:
+Domeeni <%= @domain.name %> kohta on registris järgmised andmed:
 
-Registreerija: <%= domain.registrant_name %>
-Halduskontakt: <%= domain.admin_contact_names %>
-Tehniline kontakt: <%= domain.tech_contact_names %>
-Registripidaja: <%= registrar %>
-Nimeserverid: <%= domain.nameserver_names %>
+Registreerija: <%= @domain.registrant_name %>
+Halduskontakt: <%= @domain.admin_contact_names %>
+Tehniline kontakt: <%= @domain.tech_contact_names %>
+Registripidaja: <%= @registrar.name %>
+Nimeserverid: <%= @domain.nameserver_names %>
 Ülevaate kõikidest endaga seotud domeenidest saate registreerija portaalist. <%= ENV['registrant_url'] %>.
 
 Parimate soovidega
@@ -22,20 +19,20 @@ Eesti Interneti Sihtasutus
 
 --------------------------------------
 
-The <%= domain %> domain has expired
+The <%= @domain.name %> domain has expired
 Dear user of .ee domain,
 
-The domain name <%= domain %> has expired and will not be available on the Internet from <%= domain.on_hold_date %>. From <%= domain.delete_date %>, the <%= domain %> domain will be available for registration on a first come first served basis.
+The domain name <%= @domain.name %> has expired and will not be available on the Internet from <%= @domain.on_hold_date %>. From <%= @domain.delete_date %>, the <%= @domain.name %> domain will be available for registration on a first come first served basis.
 
-To renew the domain registration, please contact your registrar <%= registrar %>. You can find the registrar's contacts at http://internet.ee/registrars.
+To renew the domain registration, please contact your registrar <%= @registrar.name %>. You can find the registrar's contacts at http://internet.ee/registrars.
 
-The following data for the <%= domain %> domain have been entered into the registry:
+The following data for the <%= @domain.name %> domain have been entered into the registry:
 
-Registrant: <%= domain.registrant_name %>
-Administrative contact: <%= domain.admin_contact_names %>
-Technical contact: <%= domain.tech_contact_names %>
-Registrar: <%= registrar %>
-Name servers: <%= domain.nameserver_names %>
+Registrant: <%= @domain.registrant_name %>
+Administrative contact: <%= @domain.admin_contact_names %>
+Technical contact: <%= @domain.tech_contact_names %>
+Registrar: <%= @registrar.name %>
+Name servers: <%= @domain.nameserver_names %>
 You can find an overview of all your domains at the registrant's portal. <%= ENV['registrant_url'] %>.
 
 Best Regards,
@@ -43,20 +40,20 @@ Estonian Internet Foundation
 
 --------------------------------------
 
-Домен <%= domain %> устарел
+Домен <%= @domain.name %> устарел
 Уважаемый пользователь домена .ee
 
-Доменное имя <%= domain %> устарело и с <%= domain.on_hold_date %> недоступно в Интернете. С <%= domain.delete_date %> домен <%= domain %> доступен для регистрации всем желающим по принципу "first come, first served".
+Доменное имя <%= @domain.name %> устарело и с <%= @domain.on_hold_date %> недоступно в Интернете. С <%= @domain.delete_date %> домен <%= @domain.name %> доступен для регистрации всем желающим по принципу "first come, first served".
 
-Для продления регистрации домена просим обратиться к своему регистратору <%= registrar %>. Контактные данные регистраторов можно найти по адресу http://internet.ee/registratory.
+Для продления регистрации домена просим обратиться к своему регистратору <%= @registrar.name %>. Контактные данные регистраторов можно найти по адресу http://internet.ee/registratory.
 
-Относительно домена <%= domain %> в реестр внесены следующие данные:
+Относительно домена <%= @domain %> в реестр внесены следующие данные:
 
-Регистрант: <%= domain.registrant_name %>
-Административный контакт: <%= domain.admin_contact_names %>
-Технический контакт: <%= domain.tech_contact_names %>
-Регистратор: <%= registrar %>
-Серверы доменных имен: <%= domain.nameserver_names %>
+Регистрант: <%= @domain.registrant_name %>
+Административный контакт: <%= @domain.admin_contact_names %>
+Технический контакт: <%= @domain.tech_contact_names %>
+Регистратор: <%= @registrar.name %>
+Серверы доменных имен: <%= @domain.nameserver_names %>
 Обзор всех связанных с Вами доменов можете получить на портале регистранта. <%= ENV['registrant_url'] %>.
 
 С наилучшими пожеланиями

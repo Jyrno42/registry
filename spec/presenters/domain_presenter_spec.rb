@@ -77,11 +77,20 @@ RSpec.describe DomainPresenter do
     end
   end
 
-  describe '#to_s' do
-    let(:domain) { instance_double(Domain, name: 'test.com') }
 
-    it 'returns name' do
-      expect(presenter.to_s).to eq('test.com')
+  domain_delegatable_attributes = %i(
+    name
+    registrant_name
+  )
+
+  domain_delegatable_attributes.each do |attribute_name|
+    describe "##{attribute_name}" do
+      let(:domain) { instance_spy(Domain) }
+
+      it 'delegates to domain' do
+        presenter.send(attribute_name)
+        expect(domain).to have_received(attribute_name)
+      end
     end
   end
 end

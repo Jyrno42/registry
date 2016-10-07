@@ -348,30 +348,37 @@ describe DomainMailer do
   end
 end
 
-RSpec.describe DomainMailer do
+RSpec.describe DomainMailer, db: false do
   describe '#expiration' do
-    let(:domain) { instance_double(Domain, on_hold_date: Time.zone.parse('05.07.2010'), delete_date: Time.zone.parse('05.07.2010')) }
-    subject(:message) { DomainMailer.expiration(domain) }
+    let(:domain) { instance_spy(Domain) }
+    let(:domain_presenter) { instance_spy(DomainPresenter) }
+    let(:registrar_presenter) { instance_spy(RegistrarPresenter) }
+    subject(:message) { described_class.expiration(domain: domain) }
+
+    before :example do
+      expect(DomainPresenter).to receive(:new).and_return(domain_presenter)
+      expect(RegistrarPresenter).to receive(:new).and_return(registrar_presenter)
+    end
 
     it 'has valid sender' do
-      message.deliver_now
+      message.deliver!
       expect(message.from).to eq(['noreply@internet.ee'])
     end
 
     it 'has valid recipient' do
-      expect(domain).to receive(:registrant_email).and_return('test@test.com')
-      message.deliver_now
-      expect(message.to).to eq(['test@test.com'])
+      expect(domain).to receive(:registrant_email).and_return('registrant@test.com')
+      message.deliver!
+      expect(message.to).to eq(['registrant@test.com'])
     end
 
     it 'has valid subject' do
       expect(domain).to receive(:name).and_return('test.com')
-      message.deliver_now
+      message.deliver!
       expect(message.subject).to eq('The test.com domain has expired')
     end
 
     it 'sends message' do
-      expect { message.deliver_now }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      expect { message.deliver! }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
   end
 end

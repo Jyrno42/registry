@@ -4,7 +4,7 @@ class RegistrarPresenter
     @view = view
   end
 
-  def to_s
+  def name
     registrar.name
   end
 

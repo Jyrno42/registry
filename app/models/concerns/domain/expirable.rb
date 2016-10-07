@@ -1,12 +1,6 @@
 module Concerns::Domain::Expirable
   extend ActiveSupport::Concern
 
-  class_methods do
-    def expired
-      where("'#{DomainStatus::EXPIRED}' = ANY (statuses)")
-    end
-  end
-
   def expired?
     statuses.include?(DomainStatus::EXPIRED)
   end
