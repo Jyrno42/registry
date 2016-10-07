@@ -21,6 +21,7 @@ class DomainDeleteConfirmJob < Que::Job
 
         DomainMailer.pending_delete_rejected_notification(domain_id, true).deliver
       end
+      ::PaperTrail.whodunnit = "job - #{self.class.name} - #{action}"
 
       destroy # it's best to destroy the job in the same transaction
     end

@@ -140,4 +140,10 @@ class DomainCron
         attached_obj_type: bye_bye.class.to_s # DomainVersion
     )
   end
+
+  def self.delete_legal_doc_duplicates
+    Rake::Task['legal_doc:remove_duplicates'].reenable
+    Rake::Task['legal_doc:remove_duplicates'].invoke
+  end
+
 end

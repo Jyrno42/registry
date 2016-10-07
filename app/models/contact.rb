@@ -257,6 +257,10 @@ class Contact < ActiveRecord::Base
     def emails
       pluck(:email)
     end
+
+    def next_id
+      self.connection.select_value("SELECT nextval('#{self.sequence_name}')")
+    end
   end
 
   def roid

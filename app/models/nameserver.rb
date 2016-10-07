@@ -121,5 +121,9 @@ class Nameserver < ActiveRecord::Base
     def hostnames
       pluck(:hostname)
     end
+
+    def next_id
+      self.connection.select_value("SELECT nextval('#{self.sequence_name}')")
+    end
   end
 end
