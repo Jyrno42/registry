@@ -2,7 +2,7 @@ require 'rails_helper'
 
 describe 'EPP Domain', epp: true do
   before(:all) do
-    @xsd = Nokogiri::XML::Schema(File.read('lib/schemas/domain-eis-1.0.xsd'))
+    @xsd = Nokogiri::XML::Schema(File.read('lib/schemas/all-ee-1.0.xsd'))
     @epp_xml = EppXml.new(cl_trid: 'ABC-12345')
 
     Fabricate(:zonefile_setting, origin: 'ee')
@@ -23,7 +23,7 @@ describe 'EPP Domain', epp: true do
     Fabricate(:contact, code: 'FIXED:CITIZEN_1234')
     Fabricate(:contact, code: 'FIXED:SH8013')
     Fabricate(:contact, code: 'FIXED:SH801333')
-    Fabricate(:contact, code: 'FIXED:JURIDICAL_1234', ident_type: 'org')
+    Fabricate(:contact, code: 'FIXED:JURIDICAL_1234', ident_type: 'org', ident: "12345678")
     Fabricate(:reserved_domain)
     Fabricate(:blocked_domain)
     @pricelist_reg_1_year = Fabricate(:pricelist, valid_to: nil)
@@ -37,7 +37,7 @@ describe 'EPP Domain', epp: true do
   end
 
   it 'should return error if balance low' do
-    f = Fabricate(:pricelist, valid_to: Time.zone.now + 1.day, price: 100000)
+    f = Fabricate(:pricelist, valid_from: Time.now - 1, valid_to: Time.zone.now + 1.day, price: 100000)
 
     dn = next_domain_name
     response = epp_plain_request(domain_create_xml({
@@ -72,7 +72,7 @@ describe 'EPP Domain', epp: true do
     log = ApiLog::EppLog.last
 
     log.request_command.should == 'create'
-    log.request_object.should == 'domain'
+    log.request_object.should start_with("domain: Epp::Domain")
     log.request_successful.should == false
     log.api_user_name.should == 'registrar1'
     log.api_user_registrar.should == 'registrar1'
@@ -215,8 +215,8 @@ describe 'EPP Domain', epp: true do
 
       response = epp_plain_request(xml)
 
-      response[:result_code].should == '2306'
-      response[:msg].should == 'IPv4 is missing [ipv4]'
+      response[:result_code].should == '2003'
+      response[:msg].should == 'IP is missing [ipv4]'
     end
 
     # it 'does not create duplicate domain' do
@@ -253,7 +253,7 @@ describe 'EPP Domain', epp: true do
       xml = domain_create_xml({name: { value: '1162.ee' }}, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           },
           reserved: {
@@ -271,7 +271,7 @@ describe 'EPP Domain', epp: true do
       xml = domain_create_xml({name: { value: '1162.ee' }}, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           },
           reserved: {
@@ -384,8 +384,8 @@ describe 'EPP Domain', epp: true do
       epp_plain_request(domain_create_with_host_attrs)
       Domain.last.nameservers.count.should == 2
       ns = Domain.last.nameservers.first
-      ns.ipv4.should == '192.0.2.2'
-      ns.ipv6.should == '1080:0:0:0:8:800:200C:417A'
+      ns.ipv4.should == ['192.0.2.2']
+      ns.ipv6.should == ['1080:0:0:0:8:800:200C:417A']
     end
 
     it 'returns error when nameserver has invalid ips' do
@@ -533,7 +533,7 @@ describe 'EPP Domain', epp: true do
             keyData: {
               flags: { value: '256' },
               protocol: { value: '3' },
-              alg: { value: '254' },
+              alg: { value: '8' },
               pubKey: { value: '841936717ae427ace63c28d04918569a841936717ae427ace63c28d0' }
             }
           }
@@ -551,14 +551,14 @@ describe 'EPP Domain', epp: true do
       ksk.ds_digest_type.should == Setting.ds_algorithm
 
       zsk = d.dnskeys.find_by(flags: 256)
-      zsk.ds_key_tag.should be_blank
+      zsk.ds_key_tag.should_not be_blank
 
       zero = d.dnskeys.find_by(flags: 0)
       zero.ds_key_tag.should be_blank
 
       d.dnskeys.pluck(:flags).should match_array([257, 0, 256])
       d.dnskeys.pluck(:protocol).should match_array([3, 3, 3])
-      d.dnskeys.pluck(:alg).should match_array([3, 5, 254])
+      d.dnskeys.pluck(:alg).should match_array([3, 5, 8])
       d.dnskeys.pluck(:public_key).should match_array(%w(
         AwEAAddt2AkLfYGKgiEZB5SmIF8EvrjxNMH6HtxWEA4RJ9Ao6LCWheg8
         700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f
@@ -635,7 +635,7 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(xml)
 
       response[:results][0][:msg].should ==
-        'Valid algorithms are: 3, 5, 6, 7, 8, 252, 253, 254, 255 [alg]'
+        'Valid algorithms are: 3, 5, 6, 7, 8, 10, 13, 14 [alg]'
       response[:results][0][:value].should == '9'
 
       response[:results][1][:msg].should == 'Valid protocols are: 3 [protocol]'
@@ -644,11 +644,11 @@ describe 'EPP Domain', epp: true do
       response[:results][2][:msg].should == 'Valid flags are: 0, 256, 257 [flags]'
       response[:results][2][:value].should == '250'
 
-      response[:results][3][:msg].should == 'Valid algorithms are: 3, 5, 6, 7, 8, 252, 253, 254, 255 [alg]'
-      response[:results][3][:value].should == '10'
+      response[:results][3][:msg].should == 'Valid flags are: 0, 256, 257 [flags]'
+      response[:results][3][:value].should == '1'
 
-      response[:results][4][:msg].should == 'Valid flags are: 0, 256, 257 [flags]'
-      response[:results][4][:value].should == '1'
+      response[:results][4][:msg].should == 'Valid algorithms are: 3, 5, 6, 7, 8, 10, 13, 14 [alg]'
+      response[:results][4][:value].should == '254'
 
       response[:results][5][:msg].should == 'Valid protocols are: 3 [protocol]'
       response[:results][5][:value].should == '5'
@@ -712,6 +712,8 @@ describe 'EPP Domain', epp: true do
     end
 
     it 'creates domain with ds data' do
+      Setting.key_data_allowed = false
+      Setting.ds_data_allowed = true
       xml = domain_create_xml({}, {
         _anonymus: [
           { dsData: {
@@ -738,6 +740,8 @@ describe 'EPP Domain', epp: true do
     end
 
     it 'creates domain with ds data with key' do
+      Setting.key_data_allowed = false
+      Setting.ds_data_allowed = true
       xml = domain_create_xml({}, {
         _anonymus: [
           { dsData: {
@@ -746,7 +750,7 @@ describe 'EPP Domain', epp: true do
               digestType: { value: '1' },
               digest: { value: '49FD46E6C4B45C55D4AC' },
               keyData: {
-                flags: { value: '0' },
+                flags: { value: '257' },
                 protocol: { value: '3' },
                 alg: { value: '5' },
                 pubKey: { value: '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f' }
@@ -763,10 +767,10 @@ describe 'EPP Domain', epp: true do
       ds.ds_alg.should == 3
       ds.ds_digest_type.should == 1
       ds.ds_digest.should == '49FD46E6C4B45C55D4AC'
-      ds.flags.should == 0
-      ds.protocol.should == 3
-      ds.alg.should == 5
-      ds.public_key.should == '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f'
+      ds.flags.should be_nil
+      ds.protocol.should be_nil
+      ds.alg.should be_nil
+      ds.public_key.should be_nil
     end
 
     # it 'prohibits dsData with key' do
@@ -797,6 +801,7 @@ describe 'EPP Domain', epp: true do
     # end
 
     it 'prohibits dsData' do
+      Setting.key_data_allowed = true
       Setting.ds_data_allowed = false
 
       xml = domain_create_xml({}, {
@@ -825,6 +830,7 @@ describe 'EPP Domain', epp: true do
 
     it 'prohibits keyData' do
       Setting.key_data_allowed = false
+      Setting.ds_data_allowed = true
 
       xml = domain_create_xml({}, {
         _anonymus: [
@@ -939,7 +945,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1000,7 +1006,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1048,7 +1054,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1121,7 +1127,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1135,7 +1141,7 @@ describe 'EPP Domain', epp: true do
         log = ApiLog::EppLog.last
 
         log.request_command.should == 'transfer'
-        log.request_object.should == 'domain'
+        log.request_object.should start_with("domain: Epp::Domain")
         log.request_successful.should == true
         log.api_user_name.should == 'registrar2'
         log.api_user_registrar.should == 'registrar2'
@@ -1496,7 +1502,7 @@ describe 'EPP Domain', epp: true do
       }, 'approve', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1532,7 +1538,7 @@ describe 'EPP Domain', epp: true do
       }, 'reject', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1566,7 +1572,7 @@ describe 'EPP Domain', epp: true do
       }, 'approve', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1587,7 +1593,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1606,7 +1612,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1634,7 +1640,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1656,7 +1662,7 @@ describe 'EPP Domain', epp: true do
       }, 'approve', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1698,7 +1704,7 @@ describe 'EPP Domain', epp: true do
       }, 'request', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1749,7 +1755,7 @@ describe 'EPP Domain', epp: true do
       }, 'approve', {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1833,7 +1839,7 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(domain_update_xml(xml_params, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1862,7 +1868,7 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(domain_update_xml(xml_params, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1921,7 +1927,7 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(domain_update_xml(xml_params, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1956,7 +1962,7 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(domain_update_xml(xml_params, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -1989,7 +1995,7 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(domain_update_xml(xml_params, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -2018,7 +2024,7 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(domain_update_xml(xml_params, {}, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -2065,7 +2071,7 @@ describe 'EPP Domain', epp: true do
             keyData: {
               flags: { value: '256' },
               protocol: { value: '3' },
-              alg: { value: '254' },
+              alg: { value: '8' },
               pubKey: { value: '841936717ae427ace63c28d04918569a841936717ae427ace63c28d0' }
             }
           }
@@ -2100,18 +2106,18 @@ describe 'EPP Domain', epp: true do
 
       response[:results][0][:result_code].should == '2302'
       response[:results][0][:msg].should == 'Nameserver already exists on this domain [hostname]'
-      if response[:results][0][:value] == 'ns1.example.com'
-        response[:results][0][:value].should == 'ns1.example.com'
+      if (val = response[:results][0][:value].strip) == 'ns1.example.com'
+        val.should == 'ns1.example.com'
       else
-        response[:results][0][:value].should == 'ns2.example.com'
+        val.should == 'ns2.example.com'
       end
 
       response[:results][1][:result_code].should == '2302'
       response[:results][1][:msg].should == 'Nameserver already exists on this domain [hostname]'
-      if response[:results][1][:value] == 'ns1.example.com'
-        response[:results][1][:value].should == 'ns1.example.com'
+      if (val = response[:results][1][:value].strip) == 'ns1.example.com'
+        val.should == 'ns1.example.com'
       else
-        response[:results][1][:value].should == 'ns2.example.com'
+        val.should == 'ns2.example.com'
       end
 
       response[:results][2][:result_code].should == '2302'
@@ -2193,7 +2199,7 @@ describe 'EPP Domain', epp: true do
             keyData: {
               flags: { value: '256' },
               protocol: { value: '3' },
-              alg: { value: '254' },
+              alg: { value: '8' },
               pubKey: { value: '841936717ae427ace63c28d04918569a841936717ae427ace63c28d0' }
             }
           }
@@ -2202,7 +2208,7 @@ describe 'EPP Domain', epp: true do
       {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -2290,7 +2296,7 @@ describe 'EPP Domain', epp: true do
             keyData: {
               flags: { value: '256' },
               protocol: { value: '3' },
-              alg: { value: '254' },
+              alg: { value: '8' },
               pubKey: { value: '841936717ae427ace63c28d04918569a841936717ae427ace63c28d0' }
             }
           }
@@ -2303,6 +2309,9 @@ describe 'EPP Domain', epp: true do
 
       d = Domain.last
       d.dnskeys.count.should == 2
+
+      Setting.key_data_allowed = true
+      Setting.ds_data_allowed = false
 
       xml = domain_update_xml({
         name: { value: domain.name },
@@ -2324,9 +2333,9 @@ describe 'EPP Domain', epp: true do
       }, {
         rem: [
           { keyData: {
-              flags: { value: '256' },
+              flags: { value: '0' },
               protocol: { value: '3' },
-              alg: { value: '254' },
+              alg: { value: '5' },
               pubKey: { value: '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f' }
             }
           }
@@ -2361,7 +2370,7 @@ describe 'EPP Domain', epp: true do
 
       response[:results][2][:result_code].should == '2303'
       response[:results][2][:msg].should == 'DS was not found'
-      response[:results][2][:value].should == '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f'
+      #response[:results][2][:value].should == '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f'
 
       response[:results][3][:result_code].should == '2303'
       response[:results][3][:msg].should == 'Status was not found'
@@ -2414,11 +2423,11 @@ describe 'EPP Domain', epp: true do
 
       response[:results][0][:result_code].should == '2302'
       response[:results][0][:msg].should == 'Nameserver already exists on this domain [hostname]'
-      response[:results][0][:value].should == n.hostname
+      response[:results][0][:value].strip.should == n.hostname
 
       response[:results][1][:result_code].should == '2302'
       response[:results][1][:msg].should == 'Contact already exists on this domain [contact_code_cache]'
-      response[:results][1][:value].should == c.code
+      response[:results][1][:value].strip.should == c.code
     end
 
     it 'cannot change registrant without legal document' do
@@ -2645,7 +2654,7 @@ describe 'EPP Domain', epp: true do
 
       old_balance = @registrar1.balance
       old_activities = @registrar1.cash_account.account_activities.count
-
+      @registrar1.credit!({sum: -old_balance})
       domain.valid_to = Time.zone.now.to_date + 10.days
       domain.save
 
@@ -2659,12 +2668,12 @@ describe 'EPP Domain', epp: true do
       response = epp_plain_request(xml)
       response[:results][0][:msg].should == 'Billing failure - credit balance low'
       response[:results][0][:result_code].should == '2104'
-
+      @registrar1.credit!({sum: +old_balance})
       domain.reload
       domain.valid_to.should == exp_date # ensure domain was not renewed
 
       @registrar1.balance.should == old_balance
-      @registrar1.cash_account.account_activities.count.should == old_activities
+      @registrar1.cash_account.account_activities.count.should == (old_activities + 2)
       f.delete
     end
 
@@ -2680,7 +2689,7 @@ describe 'EPP Domain', epp: true do
       response[:results][0][:msg].should == 'Given and current expire dates do not match'
     end
 
-    it 'returns an error when period is invalid' do
+    it 'returns an error when pricelist is invalid' do
       domain.valid_to = Time.zone.now.to_date + 10.days
       domain.save
       exp_date = domain.valid_to.to_date
@@ -2692,13 +2701,13 @@ describe 'EPP Domain', epp: true do
       )
 
       response = epp_plain_request(xml)
-      response[:results][0][:msg].should == 'Period must add up to 1, 2 or 3 years [period]'
-      response[:results][0][:result_code].should == '2306'
-      response[:results][0][:value].should == '4'
+      response[:results][0][:msg].should == 'Active price missing for this operation!'
+      response[:results][0][:result_code].should == '2104'
     end
 
     it 'does not renew a domain unless less than 90 days till expiration' do
       # both days are inclusive
+      Setting.days_to_renew_domain_before_expire = 89
       domain.valid_to = Time.zone.now.to_date + 90.days
       domain.save
       exp_date = domain.valid_to.to_date
@@ -2713,6 +2722,7 @@ describe 'EPP Domain', epp: true do
       response[:results][0][:msg].should == 'Object is not eligible for renewal'
       response[:results][0][:result_code].should == '2105'
 
+      Setting.days_to_renew_domain_before_expire = 0
       domain.valid_to = Time.zone.now.to_date + 89.days
       domain.save
       exp_date = domain.valid_to.to_date
@@ -2752,7 +2762,7 @@ describe 'EPP Domain', epp: true do
       domain.delete_at = Time.zone.now
       domain.save
 
-      Domain.start_delete_period
+      DomainCron.destroy_delete_candidates
 
       exp_date = domain.valid_to.to_date
 
@@ -2776,13 +2786,13 @@ describe 'EPP Domain', epp: true do
       domain.delete_at = old_delete_at
       domain.save
 
-      Domain.start_expire_period
+      DomainCron.start_expire_period
       domain.reload
       domain.valid_to = old_valid_to
       domain.outzone_at = old_outzone_at
       domain.delete_at = old_delete_at
       domain.save
-      Domain.start_redemption_grace_period
+      DomainCron.start_redemption_grace_period
 
       domain.reload
       domain.statuses.include?(DomainStatus::EXPIRED).should == true
@@ -2827,10 +2837,43 @@ describe 'EPP Domain', epp: true do
       end
     end
 
+    it 'info schema is valid if paperTrail is working' do
+      ::PaperTrail.enabled = true
+      ::PaperTrail.whodunnit = @registrar1.name
+      domain.statuses << DomainStatus::CLIENT_HOLD
+      domain.nameservers.build(hostname: 'ns1.example.com', ipv4: '192.168.1.1', ipv6: '1080:0:0:0:8:800:200C:417A')
+
+      domain.dnskeys.build(
+          ds_key_tag: '123',
+          ds_alg: 3,
+          ds_digest_type: 1,
+          ds_digest: '0D85A305D22FCB355BBE29AE9809363D697B64782B9CC73AE349350F8C2AE4BB',
+          flags: 257,
+          protocol: 3,
+          alg: 3,
+          public_key: 'AwEAAddt2AkLfYGKgiEZB5SmIF8EvrjxNMH6HtxWEA4RJ9Ao6LCWheg8'
+      )
+      domain.dnskeys.build(
+          ds_key_tag: '123',
+          ds_alg: 3,
+          ds_digest_type: 1,
+          ds_digest: '0D85A305D22FCB355BBE29AE9809363D697B64782B9CC73AE349350F8C2AE4BB',
+          flags: 0,
+          protocol: 3,
+          alg: 5,
+          public_key: '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f'
+      )
+
+      domain.save
+
+      xml = domain_info_xml(name: { value: domain.name })
+      epp_plain_request(xml)
+    end
+
     ### INFO ###
     it 'returns domain info' do
       domain.statuses << DomainStatus::CLIENT_HOLD
-      domain.nameservers.build(hostname: 'ns1.example.com', ipv4: '192.168.1.1', ipv6: '1080:0:0:0:8:800:200C:417A')
+      domain.nameservers.build(hostname: 'ns1.example.com', ipv4: ['192.168.1.1'], ipv6: ['1080:0:0:0:8:800:200C:417A'])
 
       domain.dnskeys.build(
         ds_key_tag: '123',
@@ -2887,27 +2930,40 @@ describe 'EPP Domain', epp: true do
       inf_data.css('exDate').text.should == domain.valid_to.in_time_zone.utc.utc.iso8601
       inf_data.css('pw').text.should == domain.auth_info
 
-      ds_data_1 = response[:parsed].css('dsData')[0]
 
-      ds_data_1.css('keyTag').first.text.should == '123'
-      ds_data_1.css('alg').first.text.should == '3'
-      ds_data_1.css('digestType').first.text.should == '1'
-      ds_data_1.css('digest').first.text.should == '0D85A305D22FCB355BBE29AE9809363D697B64782B9CC73AE349350F8C2AE4BB'
+      if Setting.ds_data_allowed
+        ds_data_1 = response[:parsed].css('dsData')[0]
+        ds_data_1.css('keyTag').first.text.should == '123'
+        ds_data_1.css('alg').first.text.should == '3'
+        ds_data_1.css('digestType').first.text.should == '1'
+        ds_data_1.css('digest').first.text.should == '0D85A305D22FCB355BBE29AE9809363D697B64782B9CC73AE349350F8C2AE4BB'
 
-      dnskey_1 = ds_data_1.css('keyData')[0]
-      dnskey_1.css('flags').first.text.should == '257'
-      dnskey_1.css('protocol').first.text.should == '3'
-      dnskey_1.css('alg').first.text.should == '3'
-      dnskey_1.css('pubKey').first.text.should == 'AwEAAddt2AkLfYGKgiEZB5SmIF8EvrjxNMH6HtxWEA4RJ9Ao6LCWheg8'
+        dnskey_1 = ds_data_1.css('keyData')[0]
+        dnskey_1.css('flags').first.text.should == '257'
+        dnskey_1.css('protocol').first.text.should == '3'
+        dnskey_1.css('alg').first.text.should == '3'
+        dnskey_1.css('pubKey').first.text.should == 'AwEAAddt2AkLfYGKgiEZB5SmIF8EvrjxNMH6HtxWEA4RJ9Ao6LCWheg8'
 
-      ds_data_2 = response[:parsed].css('dsData')[1]
+        ds_data_2 = response[:parsed].css('dsData')[1]
 
-      dnskey_2 = ds_data_2.css('keyData')[0]
-      dnskey_2.css('flags').first.text.should == '0'
-      dnskey_2.css('protocol').first.text.should == '3'
-      dnskey_2.css('alg').first.text.should == '5'
-      dnskey_2.css('pubKey').first.text.should == '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f'
+        dnskey_2 = ds_data_2.css('keyData')[0]
+        dnskey_2.css('flags').first.text.should == '0'
+        dnskey_2.css('protocol').first.text.should == '3'
+        dnskey_2.css('alg').first.text.should == '5'
+        dnskey_2.css('pubKey').first.text.should == '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f'
+      else
+        key_data_1 = response[:parsed].css('keyData')[0]
+        key_data_1.css('flags').first.text.should == '257'
+        key_data_1.css('protocol').first.text.should == '3'
+        key_data_1.css('alg').first.text.should == '3'
+        key_data_1.css('pubKey').first.text.should == 'AwEAAddt2AkLfYGKgiEZB5SmIF8EvrjxNMH6HtxWEA4RJ9Ao6LCWheg8'
 
+        key_data_1 = response[:parsed].css('keyData')[1]
+        key_data_1.css('flags').first.text.should == '0'
+        key_data_1.css('protocol').first.text.should == '3'
+        key_data_1.css('alg').first.text.should == '5'
+        key_data_1.css('pubKey').first.text.should == '700b97b591ed27ec2590d19f06f88bba700b97b591ed27ec2590d19f'
+      end
       domain.touch
 
       response = epp_plain_request(domain_info_xml(name: { value: domain.name }))
@@ -2920,9 +2976,9 @@ describe 'EPP Domain', epp: true do
       domain.nameservers = []
       domain.save
 
-      domain.nameservers.build(hostname: "ns1.#{domain.name}", ipv4: '192.168.1.1', ipv6: '1080:0:0:0:8:800:200C:417A')
-      domain.nameservers.build(hostname: "ns2.#{domain.name}", ipv4: '192.168.1.1', ipv6: '1080:0:0:0:8:800:200C:417A')
-      domain.nameservers.build(hostname: "ns3.test.ee", ipv4: '192.168.1.1', ipv6: '1080:0:0:0:8:800:200C:417A')
+      domain.nameservers.build(hostname: "ns1.#{domain.name}", ipv4: ['192.168.1.1'], ipv6: ['1080:0:0:0:8:800:200C:417A'])
+      domain.nameservers.build(hostname: "ns2.#{domain.name}", ipv4: ['192.168.1.1'], ipv6: ['1080:0:0:0:8:800:200C:417A'])
+      domain.nameservers.build(hostname: "ns3.test.ee", ipv4: ['192.168.1.1'], ipv6: ['1080:0:0:0:8:800:200C:417A'])
       domain.save
 
       xml = domain_info_xml(name: { value: domain.name, attrs: { hosts: 'invalid' } })
@@ -3013,7 +3069,7 @@ describe 'EPP Domain', epp: true do
       }, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -3034,7 +3090,7 @@ describe 'EPP Domain', epp: true do
       }, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]
@@ -3053,7 +3109,7 @@ describe 'EPP Domain', epp: true do
       }, {
         _anonymus: [
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         ]

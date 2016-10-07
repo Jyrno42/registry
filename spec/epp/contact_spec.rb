@@ -2,7 +2,7 @@ require 'rails_helper'
 
 describe 'EPP Contact', epp: true do
   before :all do
-    @xsd = Nokogiri::XML::Schema(File.read('lib/schemas/contact-eis-1.0.xsd'))
+    @xsd = Nokogiri::XML::Schema(File.read('lib/schemas/all-ee-1.0.xsd'))
     Fabricate(:zonefile_setting, origin: 'ee')
     Fabricate(:zonefile_setting, origin: 'pri.ee')
     Fabricate(:zonefile_setting, origin: 'med.ee')
@@ -26,13 +26,13 @@ describe 'EPP Contact', epp: true do
         attrs: { type: 'priv', cc: 'EE' }
       },
       legalDocument: {
-        value: 'dGVzdCBmYWlsCg==',
+        value: Base64.encode64('S' * 4.kilobytes),
         attrs: { type: 'pdf' }
       }
     }
     @update_extension = {
       legalDocument: {
-        value: 'dGVzdCBmYWlsCg==',
+        value: Base64.encode64('S' * 4.kilobytes),
         attrs: { type: 'pdf' }
       }
     }
@@ -91,7 +91,7 @@ describe 'EPP Contact', epp: true do
 
         log = ApiLog::EppLog.last
         log.request_command.should == 'create'
-        log.request_object.should == 'contact'
+        log.request_object.should start_with("contact: Epp::Contact")
         log.request_successful.should == true
         log.api_user_name.should == 'registrar1'
         log.api_user_registrar.should == 'registrar1'
@@ -116,7 +116,7 @@ describe 'EPP Contact', epp: true do
             attrs: { type: 'birthday', cc: 'US' }
           },
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         }
@@ -217,9 +217,8 @@ describe 'EPP Contact', epp: true do
           }
         }
         response = create_request({}, extension)
-        response[:msg].should == "Element '{https://epp.tld.ee/schema/eis-1.0.xsd}ident': The attribute "\
-          "'cc' is required but missing."
-        response[:result_code].should == '2001'
+        response[:msg].should == "Required ident attribute missing: cc"
+        response[:result_code].should == '2003'
       end
 
       it 'should return country missing' do
@@ -460,7 +459,7 @@ describe 'EPP Contact', epp: true do
             attrs: { type: 'birthday', cc: 'US' }
           },
           legalDocument: {
-            value: 'dGVzdCBmYWlsCg==',
+            value: Base64.encode64('S' * 4.kilobytes),
             attrs: { type: 'pdf' }
           }
         }
@@ -816,6 +815,7 @@ describe 'EPP Contact', epp: true do
       end
 
       it 'return info about contact' do
+        ::PaperTrail.whodunnit = "tester"
         Fabricate(:contact, code: 'INFO-4444', name: 'Johnny Awesome')
 
         response = info_request({ id: { value: 'FIXED:INFO-4444' } })
@@ -827,6 +827,7 @@ describe 'EPP Contact', epp: true do
       end
 
       it 'should add legacy CID format as append' do
+        ::PaperTrail.whodunnit = "tester"
         Fabricate(:contact, code: 'CID:FIXED:INFO-5555', name: 'Johnny Awesome')
 
         response = info_request({ id: { value: 'FIXED:CID:FIXED:INFO-5555' } })
@@ -838,6 +839,7 @@ describe 'EPP Contact', epp: true do
       end
 
       it 'should return ident in extension' do
+        ::PaperTrail.whodunnit = "tester"
         @registrar1_contact = Fabricate(:contact, code: 'INFO-IDENT',
           registrar: @registrar1, name: 'Johnny Awesome')
 
@@ -861,6 +863,7 @@ describe 'EPP Contact', epp: true do
       end
 
       it 'should honor new contact code format' do
+        ::PaperTrail.whodunnit = "tester"
         @registrar1_contact = Fabricate(:contact, code: 'FIXED:test:custom:code')
         @registrar1_contact.code.should == 'FIXED:TEST:CUSTOM:CODE'
 
@@ -912,9 +915,9 @@ describe 'EPP Contact', epp: true do
           response[:results].count.should == 1
 
           contact = response[:parsed].css('resData infData')
-          contact.css('postalInfo addr city').first.try(:text).should == nil
-          contact.css('email').first.try(:text).should == nil
-          contact.css('voice').first.try(:text).should == nil
+          contact.css('postalInfo addr city').first.try(:text).should == "No access"
+          contact.css('email').first.try(:text).should == "No access"
+          contact.css('voice').first.try(:text).should == "No access"
         end
       end
     end

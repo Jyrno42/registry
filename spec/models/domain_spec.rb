@@ -110,10 +110,12 @@ describe Domain do
     end
 
     it 'should have whois body by default' do
+      @domain.run_callbacks(:commit)
       @domain.whois_record.present?.should == true
     end
 
     it 'should have whois json by default' do
+      @domain.run_callbacks(:commit)
       @domain.whois_record.json.present?.should == true
     end
 
@@ -122,7 +124,7 @@ describe Domain do
     end
 
     it 'should not find any domain pendings to clean' do
-      Domain.clean_expired_pendings.should == 0
+      DomainCron.clean_expired_pendings.should == 0
     end
 
     it 'should not find any domains with wrong pendings' do
@@ -131,7 +133,7 @@ describe Domain do
       domain.registrant_verification_asked_at = 30.days.ago
       domain.save
 
-      Domain.clean_expired_pendings.should == 0
+      DomainCron.clean_expired_pendings.should == 0
     end
 
     it 'should clean domain pendings' do
@@ -157,9 +159,7 @@ describe Domain do
       @domain.reload
       @domain.statuses.include?(DomainStatus::EXPIRED).should == true
       @domain.outzone_at.should be_within(5).of(old_valid_to + Setting.expire_warning_period.days)
-      @domain.delete_at.should be_within(5).of(
-        old_valid_to + Setting.expire_warning_period.days + Setting.redemption_grace_period.days
-      )
+      @domain.delete_at.should == (old_valid_to + Setting.expire_warning_period.days + Setting.redemption_grace_period.days + 1.day).beginning_of_day
 
       DomainCron.start_expire_period
       @domain.reload
@@ -177,9 +177,7 @@ describe Domain do
       @domain.reload
       @domain.statuses.include?(DomainStatus::EXPIRED).should == true
       @domain.outzone_at.should be_within(5).of(old_valid_to + Setting.expire_warning_period.days)
-      @domain.delete_at.should be_within(5).of(
-        old_valid_to + Setting.expire_warning_period.days + Setting.redemption_grace_period.days
-      )
+      @domain.delete_at.should == (old_valid_to + Setting.expire_warning_period.days + Setting.redemption_grace_period.days + 1.day).beginning_of_day
     end
 
     it 'should start redemption grace period' do
@@ -204,7 +202,9 @@ describe Domain do
     end
 
     it 'should start delete period' do
-      DomainCron.start_delete_period
+      DomainDeleteJob.jobs.clear
+
+      DomainCron.destroy_delete_candidates
       @domain.reload
       @domain.statuses.include?(DomainStatus::DELETE_CANDIDATE).should == false
 
@@ -212,19 +212,22 @@ describe Domain do
       @domain.statuses << DomainStatus::SERVER_DELETE_PROHIBITED # this prohibits delete_candidate
       @domain.save
 
-      DomainCron.start_delete_period
+      DomainCron.destroy_delete_candidates
       @domain.reload
       @domain.statuses.include?(DomainStatus::DELETE_CANDIDATE).should == false
 
       @domain.statuses = []
       @domain.save
-      DomainCron.start_delete_period
+      DomainCron.destroy_delete_candidates
       @domain.reload
 
       @domain.statuses.include?(DomainStatus::DELETE_CANDIDATE).should == true
     end
 
     it 'should destroy delete candidates' do
+      ::PaperTrail.enabled = true
+      DomainDeleteJob.jobs.clear
+
       d = Fabricate(:domain)
       d.force_delete_at = Time.zone.now
       d.save
@@ -232,11 +235,15 @@ describe Domain do
       @domain.delete_at = Time.zone.now
       @domain.save
 
+      ids = Domain.pluck(:id).sort
       Domain.count.should == 2
+      DomainCron.destroy_delete_candidates
+      DomainDeleteJob.jobs.count.should == 2
+      DomainDeleteJob.jobs.first.run_at.should <= Time.now + 24.hours
+      DomainDeleteJob.jobs.map{|e| e.args.first}.sort.should == ids
 
-      DomainCron.start_delete_period
 
-      Domain.destroy_delete_candidates
+      ids.each{|id| DomainDeleteJob.run(id) rescue "actially deleted" }
       Domain.count.should == 0
     end
 
@@ -253,8 +260,8 @@ describe Domain do
         "serverUpdateProhibited"
       ])
 
-      fda = Time.zone.now + Setting.redemption_grace_period.days
-      @domain.force_delete_at.should be_within(20).of(fda)
+      fda = (Time.zone.now + Setting.redemption_grace_period.days + 1.day).beginning_of_day
+      @domain.force_delete_at.should == fda
 
       @domain.registrar.messages.count.should == 1
       m = @domain.registrar.messages.first
@@ -714,9 +721,7 @@ describe Domain do
   it 'should not create zone origin domain' do
     d = Fabricate.build(:domain, name: 'ee')
     d.save.should == false
-    d.errors.full_messages.should match_array([
-      "Data management policy violation: Domain name is blocked [name]"
-    ])
+    d.errors.full_messages.should include("Data management policy violation: Domain name is blocked [name]")
 
     d = Fabricate.build(:domain, name: 'bla')
     d.save.should == false
@@ -851,13 +856,13 @@ describe Domain do
 
   it 'normalizes ns attrs' do
     d = Fabricate(:domain)
-    d.nameservers.build(hostname: 'BLA.EXAMPLE.EE', ipv4: '   192.168.1.1', ipv6: '1080:0:0:0:8:800:200c:417a')
+    d.nameservers.build(hostname: 'BLA.EXAMPLE.EE', ipv4: ['   192.168.1.1'], ipv6: ['1080:0:0:0:8:800:200c:417a'])
     d.save
 
     ns = d.nameservers.last
     expect(ns.hostname).to eq('bla.example.ee')
-    expect(ns.ipv4).to eq('192.168.1.1')
-    expect(ns.ipv6).to eq('1080:0:0:0:8:800:200C:417A')
+    expect(ns.ipv4).to eq(['192.168.1.1'])
+    expect(ns.ipv6).to eq(['1080:0:0:0:8:800:200C:417A'])
   end
 
   it 'does not create a reserved domain' do
