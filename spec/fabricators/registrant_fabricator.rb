@@ -1,5 +1,5 @@
 Fabricator(:registrant) do
-  registrar { Registrar.find_by_code('FIXED') }
+  registrar { Fabricate.create(:registrar) }
   code { sequence(:code) { |i| "REGISTRANT#{Faker::Number.number(8)}#{i}" } }
   auth_info 'password'
   name { sequence(:name) { |i| "REGISTRANT #{Faker::Name.name}#{i}" } }
