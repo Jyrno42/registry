@@ -8,6 +8,18 @@ class RegistrarPresenter
     registrar.name
   end
 
+  def email
+    registrar.email
+  end
+
+  def phone
+    registrar.phone
+  end
+
+  def url
+    registrar.url
+  end
+
   private
 
   attr_reader :registrar

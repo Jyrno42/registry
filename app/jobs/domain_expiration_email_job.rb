@@ -6,6 +6,6 @@ class DomainExpirationEmailJob < ActiveJob::Base
 
     return if domain.registered?
 
-    DomainMailer.expiration(domain).deliver!
+    DomainMailer.expiration(domain: domain).deliver!
   end
 end

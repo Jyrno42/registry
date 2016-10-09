@@ -15,6 +15,13 @@ Kui üleandmine ei ole 30 päeva jooksul toimunud, kustub domeen <%= @domain.nam
 
 Lisaküsimuste korral võtke palun ühendust oma registripidajaga <%= @domain.registrar %>. Registripidajate kontaktid leiate aadressilt http://www.internet.ee/registripidajad/
 
+Registripidaja:
+<%= @domain.registrar.name %>
+Email: <%= @domain.registrar.email %>
+Telefon: <%= @domain.registrar.phone %>
+Veebileht: <%= @domain.registrar.url %>
+
+
 
 
 Dear contact of <%= @domain.name %> domain
@@ -33,6 +40,13 @@ According to paragraph 6.4 of the Domain Regulation, the registrant holding a ri
 If the transfer has not been made in 30 days, the domain <%= @domain.name %> will be deleted at a randomly chosen moment within 24 hours after <%= l(@domain.force_delete_at, format: :date) %>. After deletion it is possible to reregister the domain on a "first come, first served" basis.
 
 Should you have additional questions, please contact your registrar <%= @domain.registrar %>, whose contact information can be found at http://www.internet.ee/registrars/
+
+Registrar:
+<%= @domain.registrar.name %>
+Email: <%= @domain.registrar.email %>
+Phone: <%= @domain.registrar.phone %>
+Website: <%= @domain.registrar.url %>
+
 
 
 
@@ -53,7 +67,11 @@ EIS стало известно, что юридическое лицо с ре�
 
 Просим обратиться к своему регистратору <%= @domain.registrar %>. Контактные данные регистраторов можно найти по адресу http://www.internet.ee/registratory
 
-
+Регистратор:
+<%= @domain.registrar.name %>
+Электронная почта: <%= @domain.registrar.email %>
+Телефон: <%= @domain.registrar.phone %>
+Веб-сайт: <%= @domain.registrar.url %>
 
 Lugupidamisega,
 Best Regards,
