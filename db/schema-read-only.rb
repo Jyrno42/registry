@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160629114503) do
+ActiveRecord::Schema.define(version: 20160527110738) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -479,10 +479,8 @@ ActiveRecord::Schema.define(version: 20160629114503) do
     t.datetime "created_at"
     t.string   "creator_str"
     t.string   "path"
-    t.string   "checksum"
   end
 
-  add_index "legal_documents", ["checksum"], name: "index_legal_documents_on_checksum", using: :btree
   add_index "legal_documents", ["documentable_type", "documentable_id"], name: "index_legal_documents_on_documentable_type_and_documentable_id", using: :btree
 
   create_table "log_account_activities", force: :cascade do |t|

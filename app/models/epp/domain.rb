@@ -488,6 +488,11 @@ class Epp::Domain < Domain
 
     # at[:statuses] += at_add[:domain_statuses_attributes]
 
+    if errors.empty? && verify
+      self.upid = current_user.registrar.id if current_user.registrar
+      self.up_date = Time.zone.now
+    end
+
     if registrant_id && registrant.code == frame.css('registrant')
 
       throw :epp_error, {
@@ -495,11 +500,6 @@ class Epp::Domain < Domain
         msg: I18n.t(:contact_already_associated_with_the_domain)
       }
 
-    end
-
-    if errors.empty? && verify
-      self.upid = current_user.registrar.id if current_user.registrar
-      self.up_date = Time.zone.now
     end
 
     if errors.empty? && verify &&
