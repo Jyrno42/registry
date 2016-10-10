@@ -1008,4 +1008,21 @@ RSpec.describe Domain, db: false do
       specify { expect(domain).to_not be_registered }
     end
   end
+
+  describe '#set_server_hold' do
+    let(:domain) { described_class.new }
+
+    before :example do
+      travel_to Time.zone.parse('05.07.2010')
+      domain.set_server_hold
+    end
+
+    it 'sets corresponding status' do
+      expect(domain.statuses).to include(DomainStatus::SERVER_HOLD)
+    end
+
+    it 'sets :on_hold_time to now' do
+      expect(domain.on_hold_time).to eq(Time.zone.parse('05.07.2010'))
+    end
+  end
 end

@@ -692,6 +692,7 @@ class Domain < ActiveRecord::Base
 
   def set_server_hold
     statuses << DomainStatus::SERVER_HOLD
+    self.on_hold_time = Time.current
   end
 
   # rubocop: disable Metrics/CyclomaticComplexity
