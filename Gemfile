@@ -129,7 +129,6 @@ group :development do
 
   # deploy
   gem 'mina', '0.3.1' # for fast deployment
-  gem 'autodoc'
   gem 'sdoc', '0.4.1'  # bundle exec rake doc:rails generates the API under doc/api.
 end
 
@@ -156,6 +155,7 @@ group :development, :test do
   # gem 'html2haml', github: 'haml/html2haml', ref: '6984f50bdbbd6291535027726a5697f28778ee8d'
   gem 'html2haml',     '2.0.0'
   gem 'railroady',     '1.3.0'  # to generate database diagrams
+  gem 'autodoc'
 end
 
 group :test do
