@@ -23,6 +23,7 @@ require 'support/epp_doc'
 require 'support/feature'
 require 'support/registrar_helpers'
 require 'support/request'
+require 'support/autodoc'
 
 # Checks for pending migrations before tests are run.
 # If you are not using ActiveRecord, you can remove this line.
@@ -103,10 +104,4 @@ RSpec.configure do |config|
   config.expect_with :rspec do |c|
     c.syntax = [:should, :expect]
   end
-
-  Autodoc.configuration.path = 'doc/repp'
-  Autodoc.configuration.suppressed_request_header = ['Host']
-  Autodoc.configuration.suppressed_response_header = ['ETag', 'X-Request-Id', 'X-Runtime']
-  Autodoc.configuration.template = File.read('spec/requests/repp_doc_template.md.erb')
 end
-
