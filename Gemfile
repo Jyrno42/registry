@@ -166,9 +166,5 @@ group :development, :test do
 
   # dev tools
   gem 'unicorn'
-
-  # for travis
-  gem 'rake'
-
   gem 'autodoc'
 end
