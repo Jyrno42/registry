@@ -45,7 +45,7 @@ class DomainCron
       domain.set_graceful_expired
       STDOUT << "#{Time.zone.now.utc} DomainCron.start_expire_period: ##{domain.id} (#{domain.name}) #{domain.changes}\n" unless Rails.env.test?
 
-      send_time = domain.valid_to + Setting.expiration_reminder_mail.days
+      send_time = domain.valid_to + Setting.expiration_reminder_mail.to_i.days
 
       domain.transaction do
         domain.save(validate: false)

@@ -129,6 +129,7 @@ group :development do
 
   # deploy
   gem 'mina', '0.3.1' # for fast deployment
+  gem 'sdoc', '0.4.1'  # bundle exec rake doc:rails generates the API under doc/api.
 end
 
 group :development, :test do
@@ -139,16 +140,8 @@ group :development, :test do
   gem 'poltergeist',        '1.6.0'  # We are using PhantomJS instead
   gem 'phantomjs',          '1.9.8.0'
   gem 'fabrication',        '2.13.2' # Replacement for fixtures
-  gem 'shoulda-matchers',   '2.8.0', require: false # Additional matchers for RSpec
+
   gem 'launchy',            '2.4.3' # for opening browser automatically
-  gem 'que-testing'
-
-  # helper gems
-  gem 'database_cleaner',    '1.4.1' # For cleaning db in feature and epp tests
-  gem 'faker',               '1.4.3' # Library to generate fake data
-
-  # debug
-  gem 'pry', '0.10.1'
 
   # code review
   gem 'simplecov',     '0.10.0', require: false
@@ -161,14 +154,13 @@ group :development, :test do
   # tmp, otherwise conflics with breakman
   # gem 'html2haml', github: 'haml/html2haml', ref: '6984f50bdbbd6291535027726a5697f28778ee8d'
   gem 'html2haml',     '2.0.0'
-  gem 'sdoc',          '0.4.1'  # bundle exec rake doc:rails generates the API under doc/api.
   gem 'railroady',     '1.3.0'  # to generate database diagrams
-
-  # dev tools
-  gem 'unicorn'
-
-  # for travis
-  gem 'rake'
-
   gem 'autodoc'
+end
+
+group :test do
+  gem 'database_cleaner'
+  gem 'faker'
+  gem 'shoulda-matchers', '2.8.0', require: false
+  gem 'que-testing'
 end
