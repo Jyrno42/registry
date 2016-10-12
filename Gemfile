@@ -107,6 +107,7 @@ gem 'pdfkit', '0.6.2'
 
 # for datepicker
 gem 'jquery-ui-rails', '5.0.5'
+gem 'airbrake', '~> 5.0'
 
 group :development do
   # dev tools
