@@ -156,6 +156,7 @@ group :development, :test do
   gem 'html2haml',     '2.0.0'
   gem 'railroady',     '1.3.0'  # to generate database diagrams
   gem 'autodoc'
+  gem 'factory_girl_rails'
 end
 
 group :test do
