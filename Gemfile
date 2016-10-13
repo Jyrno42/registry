@@ -161,6 +161,5 @@ end
 group :test do
   gem 'database_cleaner'
   gem 'faker'
-  gem 'shoulda-matchers', '2.8.0', require: false
   gem 'que-testing'
 end

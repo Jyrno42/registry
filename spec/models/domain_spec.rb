@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Domain do
-  before :all do
+  before :example do
     Fabricate(:zonefile_setting, origin: 'ee')
     Fabricate(:zonefile_setting, origin: 'pri.ee')
     Fabricate(:zonefile_setting, origin: 'med.ee')
@@ -9,17 +9,8 @@ RSpec.describe Domain do
     Fabricate(:zonefile_setting, origin: 'com.ee')
   end
 
-  it { should belong_to(:registrar) }
-  it { should have_many(:nameservers) }
-  it { should belong_to(:registrant) }
-  it { should have_many(:tech_contacts) }
-  it { should have_many(:admin_contacts) }
-  it { should have_many(:domain_transfers) }
-  it { should have_many(:dnskeys) }
-  it { should have_many(:legal_documents) }
-
   context 'with invalid attribute' do
-    before :all do
+    before :example do
       @domain = Domain.new
     end
 
@@ -340,7 +331,7 @@ RSpec.describe Domain do
     end
 
     context 'with time period settings' do
-      before :all do
+      before :example do
         @save_days_to_renew = Setting.days_to_renew_domain_before_expire
         @save_warning_period = Setting.expire_warning_period
         @save_grace_period = Setting.redemption_grace_period
@@ -372,7 +363,7 @@ RSpec.describe Domain do
       end
 
       context 'with renew policy' do
-        before :all do
+        before :example do
           @policy = 30
           Setting.days_to_renew_domain_before_expire = @policy
         end
@@ -935,6 +926,22 @@ end
 RSpec.describe Domain, db: false do
   it { is_expected.to alias_attribute(:on_hold_time, :outzone_at) }
   it { is_expected.to alias_attribute(:delete_time, :delete_at) }
+
+  describe 'nameserver count validation' do
+    let(:domain) { described_class.new }
+
+    it 'rejects 1' do
+
+    end
+
+    it 'allows 2' do
+
+    end
+
+    it 'allows 2' do
+
+    end
+  end
 
   describe '#admin_contact_names' do
     let(:domain) { described_class.new }
