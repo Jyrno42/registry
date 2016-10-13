@@ -21,7 +21,7 @@ addons:
   postgresql: "9.4"
 notifications:
   email:
-    - artur.beljajev@internet.ee
+    - developers@tld.ee
 branches:
   only:
     - staging
