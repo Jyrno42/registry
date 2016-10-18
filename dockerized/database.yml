@@ -1,0 +1,26 @@
+#
+# EPP, REPP, Admin and Registrar config
+
+default: &default
+  host: <%= ENV["EIS_DATABASE_HOST"] || "localhost" %>
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  username: <%= ENV["EIS_DATABASE_USERNAME"] || "registry" %>
+  password: <%= ENV["EIS_DATABASE_PASSWORD"] || "registry_pwd" %>
+
+#
+# Staging config For EPP, REPP, Admin, Registrar
+#
+
+staging:
+  <<: *default
+  database: <%= ENV["EIS_ROOT_DATABASE_NAME"] %>
+
+whois_staging:
+  <<: *default
+  database: <%= ENV["EIS_WHOIS_DATABASE_NAME"] %>
+
+api_log_staging:
+  <<: *default
+  database: <%= ENV["EIS_LOG_DATABASE_NAME"] %>

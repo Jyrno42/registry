@@ -1,0 +1,69 @@
+FROM phusion/baseimage:0.9.19
+MAINTAINER Thorgate <info@thorgate.eu>
+
+# Install dependencies
+RUN apt-add-repository ppa:brightbox/ruby-ng
+RUN apt-get update && apt-get install -yq \
+    libxml2-dev\
+    libxslt1-dev\
+    libxrender1\
+    libfontconfig1\
+    wget\
+    ruby2.2\
+    ruby2.2-dev\
+    git\
+    zlib1g-dev\
+    curl\
+    libssl-dev\
+    libcurl4-openssl-dev\
+    libffi-dev\
+    build-essential\
+    postgresql-common\
+    postgresql-9.5\
+    libpq-dev
+#   libreadline-dev\
+#   libyaml-dev\
+#   libsqlite3-dev\
+#   sqlite3\
+#   python-software-properties\
+
+# Ruby setup
+RUN gem install bundler
+RUN gem install rake -v 10.5.0
+
+## Apache2 setup
+#ADD ./doc/docker/apache2/ /etc/apache2/sites-enabled
+#
+## SSH authorized keys setup
+#ADD ./doc/docker/ssh/authorized_keys /root/.ssh/authorized_keys
+
+## Use baseimage-docker's init process.
+#CMD ["/sbin/my_init"]
+
+## Set correct environment variables.
+#ENV RAILS_ENV production
+#ENV HOME /home/app
+#
+## Add app user
+#RUN useradd -ms /bin/bash app
+#
+## Registry: Copy files
+#WORKDIR /home/app/registry
+#ADD . /home/app/registry
+#
+## Add configuration files from templates
+#ADD config/database-example.yml /home/app/registry/config/database.yml
+#ADD config/application-example.yml config/application.yml
+#ADD config/secrets-example.yml config/secrets.yml
+#
+## Create some dirs and change their ownership
+#RUN mkdir -p /home/app/registry/log
+#RUN chown -R app:www-data .; chmod -R 750 .; chmod g+s .; umask 027
+#
+## Registry: bundle instakll
+#RUN rm /home/app/registry/vendor/bundle -rf
+#RUN setuser app bundle install --deployment
+
+# Clean up when done.
+RUN apt-get remove -y git wget build-essential
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*

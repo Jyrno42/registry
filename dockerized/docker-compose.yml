@@ -1,0 +1,25 @@
+version: '2'
+
+services:
+  db:
+    image: postgres:9.5
+    environment:
+      - POSTGRES_USER=eis-registry
+      - POSTGRES_PASSWORD=eis-registry-pass
+
+  eis-registry:
+    image: thorgate/eis-registry:2016.09.9
+    environment:
+      - EIS_DATABASE_HOST=db
+      - EIS_DATABASE_USERNAME=eis-registry
+      - EIS_DATABASE_PASSWORD=eis-registry-pass
+      - EIS_ROOT_DATABASE_NAME=eis_root
+      - EIS_WHOIS_DATABASE_NAME=eis_whois
+      - EIS_LOG_DATABASE_NAME=eis_logs
+      - EIS_CERT_ARCHIVE=/home/registry/registry/dockerized/unsecure-eis-ca.tar.gz
+      - EIS_SEED_FILE=/home/registry/registry/dockerized/seeds.rb
+    depends_on:
+      - db
+    ports:
+      - 9443:9443
+      - 9700:9700
