@@ -66,9 +66,6 @@ class EppController < ApplicationController
       else
         logger.error "FROM-EPP-RESCUE: #{e.message}"
         logger.error e.backtrace.join("\n")
-
-        # TODO: NOITFY AIRBRAKE / ERRBIT HERE
-        NewRelic::Agent.notice_error(e)
       end
     end
 
@@ -100,7 +97,7 @@ class EppController < ApplicationController
     e_s = epp_session
     return if e_s.new_record?
 
-    if e_s.updated_at < Time.zone.now - 5.minutes
+    if !Rails.env.development? && (e_s.updated_at < Time.zone.now - 5.minutes)
       @api_user = current_user # cache current_user for logging
       e_s.destroy
       response.headers['X-EPP-Returncode'] = '1500'
@@ -150,7 +147,7 @@ class EppController < ApplicationController
     end
 
     @errors.uniq!
-    
+
     logger.error "\nFOLLOWING ERRORS OCCURRED ON EPP QUERY:"
     logger.error @errors.inspect
     logger.error "\n"

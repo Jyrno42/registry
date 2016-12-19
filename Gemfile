@@ -74,9 +74,6 @@ gem 'data_migrate',
   github: 'internetee/data-migrate',
   ref: '35d22b09ff37a4e9d61ab326ad5d8eb0edf1fc81'
 
-# monitors
-gem 'newrelic_rpm', '3.12.0.288'
-
 # country listing
 gem 'countries', '0.11.4'
 
@@ -86,9 +83,8 @@ gem 'deep_cloneable', '2.1.1'
 # id + mid login
 gem 'digidoc_client', '0.2.1'
 
-# epp
-gem 'epp', '1.4.2', github: 'internetee/epp'
-gem 'epp-xml',   '1.0.5', github: 'internetee/epp-xml' # EIS EPP XMLs
+gem 'epp', '1.5.0', github: 'internetee/epp'
+gem 'epp-xml', '1.1.0', github: 'internetee/epp-xml'
 gem 'uuidtools', '2.1.5' # For unique IDs (used by the epp gem)
 
 # que
@@ -109,23 +105,13 @@ gem 'pdfkit', '0.6.2'
 gem 'jquery-ui-rails', '5.0.5'
 
 group :development do
-  # dev tools
   gem 'spring',                '1.3.6'
   gem 'spring-commands-rspec', '1.0.4'
-  # emits errors, needs more investigation
-  # gem 'spring-watcher-listen',   # otherwise spring polls the filesystem on every 0.2 seconds
-    # github: 'jonleighton/spring-watcher-listen',
-    # ref: '7f6003e14f8f9ca178a5194f210c07f54cfb67ec'
   gem 'guard',                 '2.12.9' # run tests automatically
   gem 'guard-rspec',           '4.5.2'
   gem 'guard-rails',           '0.7.1' # run EPP server automatically
   gem 'rubocop',               '0.32.1'
   gem 'guard-rubocop',         '1.2.0'
-
-  # improved errors
-  gem 'better_errors',     '2.1.1' # webconsole replacement
-  gem 'binding_of_caller', '0.7.2'
-  gem 'traceroute',        '0.5.0' # for finding dead routes and unused actions
 
   # deploy
   gem 'mina', '0.3.1' # for fast deployment
@@ -139,12 +125,7 @@ group :development, :test do
   gem 'poltergeist',        '1.6.0'  # We are using PhantomJS instead
   gem 'phantomjs',          '1.9.8.0'
   gem 'fabrication',        '2.13.2' # Replacement for fixtures
-  gem 'shoulda-matchers',   '2.8.0', require: false # Additional matchers for RSpec
   gem 'launchy',            '2.4.3' # for opening browser automatically
-
-  # helper gems
-  gem 'database_cleaner',    '1.4.1' # For cleaning db in feature and epp tests
-  gem 'faker',               '1.4.3' # Library to generate fake data
 
   # debug
   gem 'pry', '0.10.1'
@@ -165,9 +146,15 @@ group :development, :test do
 
   # dev tools
   gem 'unicorn'
-
-  # for travis
-  gem 'rake'
-
   gem 'autodoc'
+end
+
+group :staging do
+  gem 'airbrake'
+end
+
+group :test do
+  gem 'database_cleaner'
+  gem 'factory_girl_rails'
+  gem 'webmock'
 end

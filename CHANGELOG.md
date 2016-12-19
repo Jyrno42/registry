@@ -1,3 +1,27 @@
+16.12.2016
+* Allow contact address processing to be configurable via admin
+* EPP XML schema namespace "urn:ietf:params:xml:ns:epp-1.0" replaced with "https://epp.tld.ee/schema/epp-ee-1.0.xsd"
+* EPP XML schema contact-eis-1.0 replaced with contact-ee-1.1
+
+18.11.2016 
+* Domain expiration emails are now sent out to admin contacts as well. Sending bug is fixed.
+* Include detailed registrar's contact info in emails
+
+07.11.2016 
+* Use app time zone when calculating valid_to, outzone_at and delete_at domain attributes
+* Treat domains as expired when expire_time is set to current time
+* Improve domain's outzone and delete logic
+
+25.10.2016 
+* Outdated specs removed, failing specs fixed, rspec config improved
+
+20.10.2016
+* Travis CI integration added, New Relic removed
+
+19.10.2016
+* BUG fix: Record current time for outzone on domain:delete EPP request
+* ForceDelete automatic notice: fixed et and ee wording to reflect the date the domain is actually deleted.
+
 9.09.2016
 * Registry:
   * domains expire now at the beginning of the date followed by the date of regsitration. Expiration and redemption grace periods now follow domainregulations more correctly and delete date returned in whois matches the date the domain is actually deleted (129684535)

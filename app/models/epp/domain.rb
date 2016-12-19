@@ -53,6 +53,9 @@ class Epp::Domain < Domain
       domain = Epp::Domain.new
       domain.attributes = domain.attrs_from(frame, current_user)
       domain.attach_default_contacts
+      domain.registered_at = Time.zone.now
+      domain.valid_from = Time.zone.now
+      domain.valid_to = domain.valid_from.beginning_of_day + convert_period_to_time(domain.period, domain.period_unit) + 1.day
       domain
     end
   end
@@ -568,7 +571,6 @@ class Epp::Domain < Domain
        frame.css('delete').children.css('delete').attr('verified').to_s.downcase != 'yes'
 
       registrant_verification_asked!(frame.to_s, user_id)
-      self.deliver_emails = true # turn on email delivery for epp
       pending_delete!
       manage_automatic_statuses
       true # aka 1001 pending_delete
@@ -599,7 +601,18 @@ class Epp::Domain < Domain
     return false if errors.any?
 
     p = self.class.convert_period_to_time(period, unit)
-    self.valid_to = valid_to + p
+    renewed_expire_time = valid_to + p
+
+    # Change it when Pricelist model periods change
+    max_reg_time = 4.years.from_now
+
+    if renewed_expire_time >= max_reg_time
+      add_epp_error('2105', nil, nil, I18n.t('epp.domains.object_is_not_eligible_for_renewal',
+                                             max_date: max_reg_time.to_date.to_s(:db)))
+      return false if errors.any?
+    end
+
+    self.valid_to = renewed_expire_time
     self.outzone_at = nil
     self.delete_at = nil
     self.period = period
@@ -644,8 +657,9 @@ class Epp::Domain < Domain
     oc.code = nil
     oc.registrar_id = registrar_id
     oc.copy_from_id = c.id
-    oc.prefix_code
+    oc.generate_code
     oc.domain_transfer = true
+    oc.remove_address unless Contact.address_processing?
     oc.save!(validate: false)
     oc
   end

@@ -1,17 +1,31 @@
 require 'rails_helper'
 
 describe Keyrelay do
-  before :all do
+  before :example do
+    Setting.ds_algorithm = 2
+    Setting.ds_data_allowed = true
+    Setting.ds_data_with_key_allowed = true
+    Setting.key_data_allowed = true
+
+    Setting.dnskeys_min_count = 0
+    Setting.dnskeys_max_count = 9
+    Setting.ns_min_count = 2
+    Setting.ns_max_count = 11
+
+    Setting.transfer_wait_time = 0
+
+    Setting.admin_contacts_min_count = 1
+    Setting.admin_contacts_max_count = 10
+    Setting.tech_contacts_min_count = 0
+    Setting.tech_contacts_max_count = 10
+
+    Setting.client_side_status_editing_enabled = true
+
     Fabricate(:zonefile_setting, origin: 'ee')
   end
 
-  it { should belong_to(:domain) }
-  it { should belong_to(:requester) }
-  it { should belong_to(:accepter) }
-  it { should have_many(:legal_documents) }
-
   context 'with invalid attribute' do
-    before :all do
+    before :example do
       @keyrelay = Keyrelay.new
     end
 
@@ -34,7 +48,7 @@ describe Keyrelay do
   end
 
   context 'with valid attributes' do
-    before :all do
+    before :example do
       @keyrelay = Fabricate(:keyrelay)
     end
 

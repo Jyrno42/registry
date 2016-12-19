@@ -3,8 +3,8 @@ default: &default
   adapter: postgresql
   encoding: unicode
   pool: 5
-  username: postgres 
-  password: 
+  username: postgres
+  password:
 
 test:
   <<: *default
@@ -17,3 +17,7 @@ whois_test:
 api_log_test:
   <<: *default
   database: registry_api_log_test
+
+registrant_write_test:
+  <<: *default
+  database: registry_test

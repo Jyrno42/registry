@@ -1,9 +1,6 @@
 require 'rails_helper'
 
 describe BankTransaction do
-  it { should belong_to(:bank_statement) }
-  it { should have_one(:account_activity) }
-
   context 'with invalid attribute' do
     before :all do
       @bank_transaction = BankTransaction.new
@@ -35,17 +32,6 @@ describe BankTransaction do
       @bank_transaction = Fabricate(:bank_statement)
       @bank_transaction.valid?
       @bank_transaction.errors.full_messages.should match_array([])
-    end
-
-    it 'should bind transaction with invoice manually' do
-      r = Fabricate(:registrar_with_no_account_activities, reference_no: 'RF7086666663')
-      invoice = r.issue_prepayment_invoice(200, 'add some money')
-
-      bt = Fabricate(:bank_transaction, { sum: 240 })
-      bt.bind_invoice(invoice.number)
-
-      invoice.receipt_date.should_not be_blank
-      r.cash_account.balance.should == 200.0
     end
 
     it 'should not bind transaction with mismatching sums' do
