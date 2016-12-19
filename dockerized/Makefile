@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 
 NAME = thorgate/eis-registry
-VERSION = 2016.09.9
+VERSION = 2016.12.16
 
 help:
 	@echo "Goals"

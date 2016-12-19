@@ -146,6 +146,7 @@ ADD dockerized/application.yml /home/registry/registry/config/application.yml
 
 # Add configuration files from templates
 ADD config/secrets-example.yml /home/registry/registry/config/secrets.yml
+ADD config/environments/staging-example.rb /home/registry/registry/config/environments/staging.rb
 
 # Replace some values inside configs
 RUN sed -i -e 's/localhost/db/g' /home/registry/registry/config/database.yml
@@ -168,9 +169,6 @@ RUN touch /home/registry/registry/log/webservices.log
 RUN chown -R www-data:www-data .; chmod -R 750 .; chmod g+s .; umask 027
 RUN chmod -R g+w /home/registry/registry/log
 RUN chmod -R g+w /home/registry/registry/tmp
-
-# Disable ActiveSupport logger
-RUN sed -i -e 's/config\.logger \= ActiveSupport/#config\.logger \= ActiveSupport/g' /home/registry/registry/config/environments/staging.rb
 
 # Reduce image size
 RUN apt-get remove -y \
